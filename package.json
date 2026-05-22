@@ -1,0 +1,17 @@
+{
+  "name": "site-americanfullfightinbons",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Site public AFFBC compatible Cloudflare Workers + D1.",
+  "scripts": {
+    "cf-typegen": "wrangler types",
+    "check": "tsc --noEmit && wrangler deploy --dry-run",
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
+    "seedLocalD1": "wrangler d1 migrations apply DB --local"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "wrangler": "4.92.0"
+  }
+}
