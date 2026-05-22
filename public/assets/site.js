@@ -65,6 +65,29 @@ function renderStorySection(data, section) {
   `;
 }
 
+function renderSpotlightSection(data, section) {
+  return `
+    <section class="section-shell">
+      <div class="section-head">
+        <div>
+          <div class="section-tag">${escapeHtml(section.title || "À la une")}</div>
+          <h2>${escapeHtml(section.subtitle || "Stage, actualité ou message fort du club.")}</h2>
+        </div>
+        <p>Ce bloc reprend la logique du site actuel, qui met une actualité sportive importante en avant.</p>
+      </div>
+      <article class="spotlight-card">
+        <div class="spotlight-date">${escapeHtml(data.spotlight.date)}</div>
+        <h3>${escapeHtml(data.spotlight.title)}</h3>
+        <p>${escapeHtml(data.spotlight.body)}</p>
+        <div class="spotlight-actions">
+          <a class="btn btn-red" href="${escapeHtml(data.spotlight.primaryHref)}">${escapeHtml(data.spotlight.primaryLabel)}</a>
+          <a class="btn btn-dark" href="${escapeHtml(data.spotlight.secondaryHref)}">${escapeHtml(data.spotlight.secondaryLabel)}</a>
+        </div>
+      </article>
+    </section>
+  `;
+}
+
 function renderScheduleSection(data, section) {
   return `
     <section id="planning" class="section-shell">
@@ -204,6 +227,83 @@ function renderGallerySection(data, section) {
   `;
 }
 
+function renderResourcesSection(data, section) {
+  return `
+    <section class="section-shell">
+      <div class="section-head">
+        <div>
+          <div class="section-tag">${escapeHtml(section.title || "Membre actif")}</div>
+          <h2>${escapeHtml(section.subtitle || "Comptes utiles, boutique et progression technique.")}</h2>
+        </div>
+        <p>${escapeHtml(data.resourcesIntro || "")}</p>
+      </div>
+      <div class="resource-grid">
+        ${(data.resources || [])
+          .map(
+            (item) => `
+          <article class="resource-card">
+            ${item.image_url ? `<img src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.title)}" loading="lazy">` : ""}
+            <h3>${escapeHtml(item.title)}</h3>
+            <p>${escapeHtml(item.description)}</p>
+            <a class="cta" href="${escapeHtml(item.cta_href)}">${escapeHtml(item.cta_label)}</a>
+          </article>
+        `
+          )
+          .join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderEquipmentSection(data, section) {
+  return `
+    <section class="section-shell">
+      <div class="section-head">
+        <div>
+          <div class="section-tag">${escapeHtml(section.title || "Équipement")}</div>
+          <h2>${escapeHtml(section.subtitle || "Sélection d'articles et protections recommandés.")}</h2>
+        </div>
+        <p>${escapeHtml(data.equipmentIntro || "")}</p>
+      </div>
+      <div class="equipment-grid">
+        ${(data.equipment || [])
+          .map(
+            (item) => `
+          <article class="equipment-card">
+            ${item.image_url ? `<img src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.title)}" loading="lazy">` : ""}
+            <h3>${escapeHtml(item.title)}</h3>
+            <p>${escapeHtml(item.description)}</p>
+            <a class="cta" href="${escapeHtml(item.cta_href)}">${escapeHtml(item.cta_label)}</a>
+          </article>
+        `
+          )
+          .join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderSponsorSection(data, section) {
+  return `
+    <section class="section-shell">
+      <div class="section-head">
+        <div>
+          <div class="section-tag">${escapeHtml(section.title || "Mécénat")}</div>
+          <h2>${escapeHtml(section.subtitle || "Soutenir le club et ses combattants.")}</h2>
+        </div>
+        <p>Le site actuel comporte un appel au mécénat; il est maintenant modifiable depuis l'administration.</p>
+      </div>
+      <article class="sponsor-card">
+        <h3>${escapeHtml(data.sponsor.title)}</h3>
+        <p>${escapeHtml(data.sponsor.body)}</p>
+        <div class="spotlight-actions">
+          <a class="btn btn-red" href="${escapeHtml(data.sponsor.ctaHref)}">${escapeHtml(data.sponsor.ctaLabel)}</a>
+        </div>
+      </article>
+    </section>
+  `;
+}
+
 function renderContactSection(data, section) {
   return `
     <section id="contact" class="section-shell">
@@ -243,12 +343,16 @@ function renderContactSection(data, section) {
 
 function renderSections(data) {
   const renderers = {
+    spotlight: renderSpotlightSection,
     story: renderStorySection,
     schedule: renderScheduleSection,
     team: renderTeamSection,
     pricing: renderPricingSection,
     highlights: renderHighlightsSection,
     gallery: renderGallerySection,
+    resources: renderResourcesSection,
+    equipment: renderEquipmentSection,
+    sponsor: renderSponsorSection,
     contact: renderContactSection,
   };
   const html = (data.sections || [])
@@ -290,6 +394,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     setText("site-phone", data.site.phone);
     setText("site-address", data.site.address);
     setText("footer-note", data.site.footerNote);
+    setText("inpi-note", data.inpiNote);
     setLink("hero-primary", data.hero.primaryLabel, data.hero.primaryHref);
     setLink("hero-secondary", data.hero.secondaryLabel, data.hero.secondaryHref);
     renderTopLinks(data.links || []);

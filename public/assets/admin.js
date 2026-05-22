@@ -14,6 +14,20 @@ const SETTINGS_FIELDS = [
   ["hero_primary_href", "Lien CTA principal"],
   ["hero_secondary_label", "CTA secondaire"],
   ["hero_secondary_href", "Lien CTA secondaire"],
+  ["spotlight_date", "Date à la une"],
+  ["spotlight_title", "Titre à la une"],
+  ["spotlight_body", "Texte à la une"],
+  ["spotlight_cta_label", "Bouton à la une"],
+  ["spotlight_cta_href", "Lien bouton à la une"],
+  ["spotlight_secondary_label", "Bouton secondaire à la une"],
+  ["spotlight_secondary_href", "Lien bouton secondaire à la une"],
+  ["resources_intro", "Intro membre actif"],
+  ["equipment_intro", "Intro équipement"],
+  ["sponsor_title", "Titre mécénat"],
+  ["sponsor_body", "Texte mécénat"],
+  ["sponsor_cta_label", "Bouton mécénat"],
+  ["sponsor_cta_href", "Lien mécénat"],
+  ["inpi_note", "Note INPI"],
   ["footer_note", "Texte footer"],
 ];
 
@@ -163,6 +177,22 @@ function renderAll() {
     { key: "display_order", label: "Ordre", type: "number" },
     { key: "description", label: "Description", type: "textarea" },
   ]);
+  renderEntityList("resources-editor", "resources", state.resources || [], [
+    { key: "title", label: "Titre" },
+    { key: "cta_label", label: "Texte bouton" },
+    { key: "cta_href", label: "Lien bouton" },
+    { key: "display_order", label: "Ordre", type: "number" },
+    { key: "description", label: "Description", type: "textarea" },
+    { key: "image_url", label: "URL image" },
+  ]);
+  renderEntityList("equipment-editor", "equipment", state.equipment || [], [
+    { key: "title", label: "Titre" },
+    { key: "cta_label", label: "Texte bouton" },
+    { key: "cta_href", label: "Lien bouton" },
+    { key: "display_order", label: "Ordre", type: "number" },
+    { key: "description", label: "Description", type: "textarea" },
+    { key: "image_url", label: "URL image" },
+  ]);
   renderMessages();
   renderPricing();
 }
@@ -185,6 +215,20 @@ async function loadAdmin() {
     hero_primary_href: state.hero.primaryHref,
     hero_secondary_label: state.hero.secondaryLabel,
     hero_secondary_href: state.hero.secondaryHref,
+    spotlight_date: state.spotlight.date,
+    spotlight_title: state.spotlight.title,
+    spotlight_body: state.spotlight.body,
+    spotlight_cta_label: state.spotlight.primaryLabel,
+    spotlight_cta_href: state.spotlight.primaryHref,
+    spotlight_secondary_label: state.spotlight.secondaryLabel,
+    spotlight_secondary_href: state.spotlight.secondaryHref,
+    resources_intro: state.resourcesIntro,
+    equipment_intro: state.equipmentIntro,
+    sponsor_title: state.sponsor.title,
+    sponsor_body: state.sponsor.body,
+    sponsor_cta_label: state.sponsor.ctaLabel,
+    sponsor_cta_href: state.sponsor.ctaHref,
+    inpi_note: state.inpiNote,
     footer_note: state.site.footerNote,
   };
   renderAll();
@@ -198,6 +242,8 @@ function kindConfig(kind) {
     highlights: { table: "highlights", items: state.highlights },
     gallery: { table: "gallery_items", items: state.gallery },
     links: { table: "partner_links", items: state.links },
+    resources: { table: "resource_cards", items: state.resources },
+    equipment: { table: "equipment_items", items: state.equipment },
   }[kind];
 }
 
@@ -239,6 +285,8 @@ function buildNewItem(kind) {
   if (kind === "highlights") return { id, title: "Nouvel encart", body: "", badge: "", cta_label: "", cta_href: "", display_order: (state.highlights || []).length + 1 };
   if (kind === "gallery") return { id, title: "Nouvelle image", image_url: "", alt_text: "", display_order: (state.gallery || []).length + 1 };
   if (kind === "links") return { id, title: "Nouveau lien", href: "https://", description: "", display_order: (state.links || []).length + 1 };
+  if (kind === "resources") return { id, title: "Nouvelle ressource", cta_label: "Ouvrir", cta_href: "https://", description: "", image_url: "", display_order: (state.resources || []).length + 1 };
+  if (kind === "equipment") return { id, title: "Nouvel équipement", cta_label: "Voir", cta_href: "https://", description: "", image_url: "", display_order: (state.equipment || []).length + 1 };
   return null;
 }
 

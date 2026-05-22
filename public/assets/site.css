@@ -43,6 +43,7 @@ img{display:block;max-width:100%}
 .utility-link{font-size:13px;color:#ddd;border-bottom:1px solid rgba(255,255,255,.15);padding-bottom:2px}
 .utility-link:hover{color:#fff;border-color:var(--red)}
 .hero-links{display:flex;gap:18px;flex-wrap:wrap;margin-top:1.2rem}
+.inpi-note{margin-top:1rem;font-size:12px;color:#bdbdbd;letter-spacing:.08em;text-transform:uppercase}
 .hero-panel{background:rgba(0,0,0,.55);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.12);border-radius:var(--radius-lg);padding:24px;color:#fff}
 .hero-panel-badge{display:inline-block;font-size:11px;font-weight:600;background:var(--red);padding:4px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:.08em}
 .hero-panel h2{font-family:var(--font-display);font-size:34px;line-height:1.02;margin:14px 0 10px}
@@ -62,17 +63,19 @@ img{display:block;max-width:100%}
 .section-head h2{font-family:var(--font-display);font-size:42px;letter-spacing:.8px;line-height:1}
 .section-head p{max-width:560px;color:#666;line-height:1.7}
 .section-tag{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:#888;margin-bottom:6px}
-.story-card,.schedule-card,.team-card,.pricing-card,.highlight-card,.gallery-card,.contact-card{background:#fff;border:1px solid var(--card-border);border-radius:var(--radius-lg);box-shadow:var(--shadow)}
+.story-card,.schedule-card,.team-card,.pricing-card,.highlight-card,.gallery-card,.contact-card,.spotlight-card,.resource-card,.equipment-card,.sponsor-card{background:#fff;border:1px solid var(--card-border);border-radius:var(--radius-lg);box-shadow:var(--shadow)}
 .story-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
 .story-card{padding:24px}
 .story-card h3{font-family:var(--font-display);font-size:34px;line-height:1.02;margin-bottom:10px}
 .story-card p{color:#666;line-height:1.75}
-.schedule-grid,.team-grid,.pricing-grid,.highlights-grid,.gallery-grid{display:grid;gap:18px}
+.schedule-grid,.team-grid,.pricing-grid,.highlights-grid,.gallery-grid,.resource-grid,.equipment-grid{display:grid;gap:18px}
 .schedule-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 .team-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 .pricing-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 .highlights-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 .gallery-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+.resource-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.equipment-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 .schedule-card,.team-card,.pricing-card,.highlight-card{padding:20px}
 .schedule-card .meta,.team-card .meta,.pricing-card .meta,.highlight-card .meta{font-size:11px;font-weight:600;color:var(--red);letter-spacing:.08em;text-transform:uppercase}
 .schedule-card h3,.team-card h3,.pricing-card h3,.highlight-card h3{font-family:var(--font-display);font-size:28px;line-height:1.02;margin:8px 0}
@@ -83,6 +86,16 @@ img{display:block;max-width:100%}
 .gallery-card img{width:100%;aspect-ratio:1/1.15;object-fit:cover}
 .gallery-card h3{padding:14px 16px 0;font-family:var(--font-display);font-size:22px}
 .gallery-card p{padding:6px 16px 16px;color:#666;line-height:1.6}
+.spotlight-card{padding:24px;background:linear-gradient(135deg,#111 0%,#1d1d1d 100%);color:#fff;border-color:#2c2c2c}
+.spotlight-date{display:inline-block;background:var(--red);padding:5px 10px;border-radius:16px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.spotlight-card h3{font-family:var(--font-display);font-size:40px;line-height:1;margin:12px 0}
+.spotlight-card p{color:#d6d6d6;line-height:1.8}
+.spotlight-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px}
+.resource-card,.equipment-card,.sponsor-card{padding:20px}
+.resource-card img,.equipment-card img{width:100%;aspect-ratio:1.4/1;object-fit:cover;border-radius:14px;margin-bottom:12px}
+.resource-card h3,.equipment-card h3,.sponsor-card h3{font-family:var(--font-display);font-size:28px;line-height:1.02;margin-bottom:8px}
+.resource-card p,.equipment-card p,.sponsor-card p{color:#666;line-height:1.75}
+.resource-card .cta,.equipment-card .cta{display:inline-block;margin-top:12px;color:var(--red);font-weight:700}
 .contact-wrap{display:grid;grid-template-columns:1fr .9fr;gap:20px}
 .contact-card{padding:24px}
 .contact-card h3{font-family:var(--font-display);font-size:34px;line-height:1.02;margin-bottom:10px}
@@ -96,13 +109,13 @@ img{display:block;max-width:100%}
 .site-footer{background:var(--dark);color:#888;text-align:center;padding:1.6rem 1rem;margin-top:3rem;font-size:12px}
 @media (max-width: 980px){
   .hero-inner,.story-grid,.contact-wrap{grid-template-columns:1fr}
-  .quick-links-inner,.schedule-grid,.team-grid,.pricing-grid,.highlights-grid,.gallery-grid{grid-template-columns:1fr 1fr}
+  .quick-links-inner,.schedule-grid,.team-grid,.pricing-grid,.highlights-grid,.gallery-grid,.resource-grid,.equipment-grid{grid-template-columns:1fr 1fr}
 }
 @media (max-width: 760px){
   .topbar{padding:0 1rem}
   .hero,.section-shell{padding-left:1rem;padding-right:1rem}
   .topbar-inner{height:auto;padding:14px 0;align-items:flex-start;flex-direction:column}
   .main-nav{font-size:13px}
-  .quick-links-inner,.schedule-grid,.team-grid,.pricing-grid,.highlights-grid,.gallery-grid{grid-template-columns:1fr}
+  .quick-links-inner,.schedule-grid,.team-grid,.pricing-grid,.highlights-grid,.gallery-grid,.resource-grid,.equipment-grid{grid-template-columns:1fr}
   .section-head{flex-direction:column;align-items:flex-start}
 }

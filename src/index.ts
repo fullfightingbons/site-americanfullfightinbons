@@ -24,6 +24,8 @@ const PUBLIC_TABLES = new Set([
   "gallery_items",
   "partner_links",
   "pricing_plans",
+  "resource_cards",
+  "equipment_items",
 ]);
 
 const EDITABLE_TABLES = {
@@ -51,6 +53,14 @@ const EDITABLE_TABLES = {
   partner_links: {
     primaryKey: "id",
     allowedColumns: ["id", "title", "href", "description", "display_order"],
+  },
+  resource_cards: {
+    primaryKey: "id",
+    allowedColumns: ["id", "title", "description", "cta_label", "cta_href", "image_url", "display_order"],
+  },
+  equipment_items: {
+    primaryKey: "id",
+    allowedColumns: ["id", "title", "description", "cta_label", "cta_href", "image_url", "display_order"],
   },
   pricing_plans: {
     primaryKey: "id",
@@ -259,6 +269,20 @@ function publicResponseSettings(settings: Record<string, string>, env: Env): Rec
     hero_secondary_label: settings.hero_secondary_label || "Voir le calendrier",
     hero_secondary_href: settings.hero_secondary_href || "https://calendrier.americanfullfightingbons.fr/",
     footer_note: settings.footer_note || "American Full Fighting Bons en Chablais",
+    spotlight_date: settings.spotlight_date || "",
+    spotlight_title: settings.spotlight_title || "",
+    spotlight_body: settings.spotlight_body || "",
+    spotlight_cta_label: settings.spotlight_cta_label || "Voir le calendrier",
+    spotlight_cta_href: settings.spotlight_cta_href || "https://calendrier.americanfullfightingbons.fr/",
+    spotlight_secondary_label: settings.spotlight_secondary_label || "Dossier d'inscription",
+    spotlight_secondary_href: settings.spotlight_secondary_href || "https://inscription.americanfullfightingbons.fr/",
+    resources_intro: settings.resources_intro || "",
+    equipment_intro: settings.equipment_intro || "",
+    sponsor_title: settings.sponsor_title || "Devenez notre mécène",
+    sponsor_body: settings.sponsor_body || "",
+    sponsor_cta_label: settings.sponsor_cta_label || "Faire un don",
+    sponsor_cta_href: settings.sponsor_cta_href || "mailto:fullfightingbons@gmail.com",
+    inpi_note: settings.inpi_note || "",
   };
 }
 
@@ -330,13 +354,15 @@ async function readSharedPricing(env: Env): Promise<Row[]> {
 
 async function getBootstrap(env: Env): Promise<Row> {
   const settings = publicResponseSettings(await readSettingsMap(env.DB), env);
-  const [sections, schedule, team, highlights, gallery, links, fallbackPricing, sharedPricing] = await Promise.all([
+  const [sections, schedule, team, highlights, gallery, links, resources, equipment, fallbackPricing, sharedPricing] = await Promise.all([
     readTable(env.DB, "SELECT * FROM landing_sections ORDER BY display_order, id"),
     readTable(env.DB, "SELECT * FROM schedule_slots ORDER BY display_order, id"),
     readTable(env.DB, "SELECT * FROM team_members ORDER BY display_order, id"),
     readTable(env.DB, "SELECT * FROM highlights ORDER BY display_order, id"),
     readTable(env.DB, "SELECT * FROM gallery_items ORDER BY display_order, id"),
     readTable(env.DB, "SELECT * FROM partner_links ORDER BY display_order, id"),
+    readTable(env.DB, "SELECT * FROM resource_cards ORDER BY display_order, id"),
+    readTable(env.DB, "SELECT * FROM equipment_items ORDER BY display_order, id"),
     readTable(env.DB, "SELECT * FROM pricing_plans ORDER BY display_order, id"),
     readSharedPricing(env),
   ]);
@@ -363,12 +389,32 @@ async function getBootstrap(env: Env): Promise<Row> {
       body: settings.announcement_body,
     },
     story: settings.club_story,
+    spotlight: {
+      date: settings.spotlight_date,
+      title: settings.spotlight_title,
+      body: settings.spotlight_body,
+      primaryLabel: settings.spotlight_cta_label,
+      primaryHref: settings.spotlight_cta_href,
+      secondaryLabel: settings.spotlight_secondary_label,
+      secondaryHref: settings.spotlight_secondary_href,
+    },
+    resourcesIntro: settings.resources_intro,
+    equipmentIntro: settings.equipment_intro,
+    sponsor: {
+      title: settings.sponsor_title,
+      body: settings.sponsor_body,
+      ctaLabel: settings.sponsor_cta_label,
+      ctaHref: settings.sponsor_cta_href,
+    },
+    inpiNote: settings.inpi_note,
     sections,
     schedule,
     team,
     highlights,
     gallery,
     links,
+    resources,
+    equipment,
     pricing: sharedPricing.length ? sharedPricing : fallbackPricing,
     pricingSource: sharedPricing.length ? "gestion" : "local",
   };
