@@ -8,6 +8,8 @@
     "binding": "ASSETS",
     "run_worker_first": [
       "/",
+      "/admin",
+      "/admin/*",
       "/api/*"
     ]
   },
@@ -25,6 +27,11 @@
       "binding": "DB",
       "database_name": "site-americanfullfightinbons",
       "database_id": "59b6ffb0-a703-4acb-b465-8fb037c9d79c"
+    },
+    {
+      "binding": "AFFBC_DB",
+      "database_name": "affbc-production",
+      "database_id": "678b90d9-5d87-4011-b077-af5a4d0358ee"
     }
   ]
 }

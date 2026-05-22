@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Administration AFFBC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/site.css">
+  <link rel="stylesheet" href="/assets/admin.css">
+</head>
+<body class="admin-body">
+  <section id="login-screen" class="admin-login-screen">
+    <form id="login-form" class="admin-login-card">
+      <div class="admin-login-badge">Administration du site</div>
+      <h1>AFFBC Site Public</h1>
+      <p>Connectez-vous pour modifier le contenu, l'ordre des encarts et les liens du site.</p>
+      <label><span>E-mail</span><input type="email" name="email" required></label>
+      <label><span>Mot de passe</span><input type="password" name="password" required></label>
+      <button class="btn btn-red" type="submit">Se connecter</button>
+      <p id="login-status" class="admin-status"></p>
+    </form>
+  </section>
+
+  <section id="admin-app" class="admin-app" hidden>
+    <header class="admin-topbar">
+      <div>
+        <div class="brand-name">AFFBC ADMIN</div>
+        <div id="admin-user" class="admin-user-line"></div>
+      </div>
+      <div class="admin-topbar-actions">
+        <button id="refresh-button" class="btn btn-dark" type="button">Rafraîchir</button>
+        <button id="logout-button" class="btn btn-red" type="button">Déconnexion</button>
+      </div>
+    </header>
+
+    <main class="admin-main">
+      <section class="admin-grid">
+        <article class="admin-card">
+          <h2>Réglages globaux</h2>
+          <form id="settings-form" class="admin-form"></form>
+          <button class="btn btn-red" type="button" data-save-settings>Enregistrer les réglages</button>
+        </article>
+
+        <article class="admin-card">
+          <h2>Sections de page</h2>
+          <div id="sections-editor" class="admin-list"></div>
+        </article>
+
+        <article class="admin-card">
+          <h2>Planning</h2>
+          <div id="schedule-editor" class="admin-list"></div>
+          <button class="btn btn-dark" type="button" data-add="schedule">Ajouter un créneau</button>
+        </article>
+
+        <article class="admin-card">
+          <h2>Équipe</h2>
+          <div id="team-editor" class="admin-list"></div>
+          <button class="btn btn-dark" type="button" data-add="team">Ajouter un membre</button>
+        </article>
+
+        <article class="admin-card">
+          <h2>Temps forts</h2>
+          <div id="highlights-editor" class="admin-list"></div>
+          <button class="btn btn-dark" type="button" data-add="highlights">Ajouter un encart</button>
+        </article>
+
+        <article class="admin-card">
+          <h2>Galerie</h2>
+          <div id="gallery-editor" class="admin-list"></div>
+          <button class="btn btn-dark" type="button" data-add="gallery">Ajouter une image</button>
+        </article>
+
+        <article class="admin-card">
+          <h2>Liens utiles</h2>
+          <div id="links-editor" class="admin-list"></div>
+          <button class="btn btn-dark" type="button" data-add="links">Ajouter un lien</button>
+        </article>
+
+        <article class="admin-card">
+          <h2>Tarifs synchronisés</h2>
+          <p class="admin-note">Ces tarifs sont lus depuis la base du site de gestion / inscription. Pour les modifier, ajustez la configuration publique de l'inscription.</p>
+          <div id="pricing-readonly" class="admin-list"></div>
+        </article>
+
+        <article class="admin-card">
+          <h2>Messages reçus</h2>
+          <div id="messages-editor" class="admin-list"></div>
+        </article>
+
+        <article class="admin-card">
+          <h2>Mot de passe</h2>
+          <form id="password-form" class="admin-form">
+            <label><span>Mot de passe actuel</span><input type="password" name="currentPassword" required></label>
+            <label><span>Nouveau mot de passe</span><input type="password" name="nextPassword" required></label>
+          </form>
+          <button class="btn btn-red" type="button" data-change-password>Mettre à jour</button>
+        </article>
+      </section>
+      <p id="admin-status" class="admin-status admin-status-global"></p>
+    </main>
+  </section>
+
+  <script src="/assets/admin.js" defer></script>
+</body>
+</html>

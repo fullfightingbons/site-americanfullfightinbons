@@ -1,0 +1,33 @@
+.admin-body{background:#111}
+.admin-login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.admin-login-card{width:100%;max-width:420px;background:#fff;border-radius:28px;padding:28px;box-shadow:0 24px 60px rgba(0,0,0,.3);display:grid;gap:14px}
+.admin-login-badge{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--red);font-weight:700}
+.admin-login-card h1{font-family:var(--font-display);font-size:38px;line-height:1}
+.admin-login-card p{color:#666;line-height:1.7}
+.admin-login-card label,.admin-form label{display:flex;flex-direction:column;gap:8px}
+.admin-login-card span,.admin-form span{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#666}
+.admin-login-card input,.admin-form input,.admin-form textarea{font:inherit;padding:12px 14px;border:1px solid #ddd;border-radius:10px;background:#fff}
+.admin-app{min-height:100vh;background:#f3f3f3}
+.admin-topbar{background:#050505;color:#fff;padding:16px 24px;display:flex;justify-content:space-between;gap:16px;align-items:center}
+.admin-user-line{font-size:13px;color:#999;margin-top:4px}
+.admin-topbar-actions{display:flex;gap:10px;flex-wrap:wrap}
+.admin-main{max-width:1320px;margin:0 auto;padding:24px}
+.admin-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.admin-card{background:#fff;border:1px solid #ececec;border-radius:24px;padding:22px;box-shadow:0 8px 30px rgba(0,0,0,.05)}
+.admin-card h2{font-family:var(--font-display);font-size:30px;line-height:1;margin-bottom:10px}
+.admin-note{color:#666;line-height:1.7;margin-bottom:12px}
+.admin-form{display:grid;gap:12px;margin-bottom:14px}
+.admin-list{display:grid;gap:12px}
+.admin-item{border:1px solid #ececec;border-radius:18px;padding:14px;background:#fafafa}
+.admin-item-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px}
+.admin-item-title{font-family:var(--font-display);font-size:24px;line-height:1}
+.admin-item-actions{display:flex;gap:8px;flex-wrap:wrap}
+.admin-item-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.admin-item-grid .full{grid-column:1 / -1}
+.admin-status{font-size:14px;min-height:20px;color:#8B0E10}
+.admin-status-global{margin-top:18px}
+.admin-inline{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.admin-inline input[type='checkbox']{width:16px;height:16px}
+@media (max-width: 980px){
+  .admin-grid{grid-template-columns:1fr}
+}
