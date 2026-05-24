@@ -6,6 +6,9 @@ interface Env {
   CONTACT_EMAIL?: string;
   CONTACT_PHONE?: string;
   CONTACT_ADDRESS?: string;
+  CONTACT_FORM_FROM_EMAIL?: string;
+  CONTACT_FORM_TO_EMAIL?: string;
+  BREVO_API_KEY?: string;
   SESSION_SECRET?: string;
 }
 
@@ -52,7 +55,7 @@ const EDITABLE_TABLES = {
   },
   partner_links: {
     primaryKey: "id",
-    allowedColumns: ["id", "title", "href", "description", "display_order"],
+    allowedColumns: ["id", "title", "href", "description", "cta_label", "display_order"],
   },
   resource_cards: {
     primaryKey: "id",
@@ -229,6 +232,15 @@ function normalizeDbValue(value: unknown): unknown {
   return value;
 }
 
+function escapeHtmlText(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 async function readTable<T = Row>(db: D1Database, sql: string, bindings: unknown[] = []): Promise<T[]> {
   const result = await db.prepare(sql).bind(...bindings).all<T>();
   return result.results ?? [];
@@ -254,9 +266,34 @@ async function getCurrentUser(request: Request, env: Env): Promise<Row | null> {
 function publicResponseSettings(settings: Record<string, string>, env: Env): Record<string, string> {
   return {
     club_name: settings.club_name || env.SITE_NAME || "American Full Fighting Bons en Chablais",
+    brand_primary: settings.brand_primary || "AMERICAN FULL FIGHTING",
+    brand_secondary: settings.brand_secondary || "BONS EN CHABLAIS",
+    site_ambient_image:
+      settings.site_ambient_image ||
+      "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1600&q=80",
+    nav_club_label: settings.nav_club_label || "Club",
+    nav_schedule_label: settings.nav_schedule_label || "Séances",
+    nav_pricing_label: settings.nav_pricing_label || "Tarifs",
+    nav_contact_label: settings.nav_contact_label || "Contact",
+    nav_inscription_label: settings.nav_inscription_label || "Inscription",
+    nav_inscription_href: settings.nav_inscription_href || "https://inscription.americanfullfightingbons.fr/",
+    nav_calendar_label: settings.nav_calendar_label || "Calendrier",
+    nav_calendar_href: settings.nav_calendar_href || "https://calendrier.americanfullfightingbons.fr/",
+    nav_shop_label: settings.nav_shop_label || "Boutique",
+    nav_shop_href: settings.nav_shop_href || "https://boutique.americanfullfightingbons.fr/",
+    quick_links_cta_label: settings.quick_links_cta_label || "Accéder",
     hero_kicker: settings.hero_kicker || "",
     hero_title: settings.hero_title || "",
     hero_body: settings.hero_body || "",
+    hero_background_image:
+      settings.hero_background_image ||
+      "https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?auto=format&fit=crop&w=1800&q=80",
+    hero_link_inscription_label: settings.hero_link_inscription_label || "Site d'inscription",
+    hero_link_inscription_href: settings.hero_link_inscription_href || "https://inscription.americanfullfightingbons.fr/",
+    hero_link_calendar_label: settings.hero_link_calendar_label || "Site calendrier",
+    hero_link_calendar_href: settings.hero_link_calendar_href || "https://calendrier.americanfullfightingbons.fr/",
+    hero_link_shop_label: settings.hero_link_shop_label || "Boutique",
+    hero_link_shop_href: settings.hero_link_shop_href || "https://boutique.americanfullfightingbons.fr/",
     announcement_badge: settings.announcement_badge || "",
     announcement_title: settings.announcement_title || "",
     announcement_body: settings.announcement_body || "",
@@ -264,6 +301,15 @@ function publicResponseSettings(settings: Record<string, string>, env: Env): Rec
     contact_phone: settings.contact_phone || env.CONTACT_PHONE || "",
     contact_address: settings.contact_address || env.CONTACT_ADDRESS || "",
     club_story: settings.club_story || "",
+    story_intro:
+      settings.story_intro ||
+      "American Full Fighting Bons en Chablais réunit apprentissage technique, intensité progressive et esprit de groupe dans une ambiance encadrée.",
+    story_card_title: settings.story_card_title || "Le club",
+    story_note_label: settings.story_note_label || "Repères",
+    story_note_title: settings.story_note_title || "Pour qui ?",
+    story_note_body:
+      settings.story_note_body ||
+      "Cours mixtes, progression suivie, objectifs clairs et séances pensées pour développer technique, condition physique et confiance.",
     hero_primary_label: settings.hero_primary_label || "Préinscription",
     hero_primary_href: settings.hero_primary_href || "https://inscription.americanfullfightingbons.fr/",
     hero_secondary_label: settings.hero_secondary_label || "Voir le calendrier",
@@ -272,16 +318,55 @@ function publicResponseSettings(settings: Record<string, string>, env: Env): Rec
     spotlight_date: settings.spotlight_date || "",
     spotlight_title: settings.spotlight_title || "",
     spotlight_body: settings.spotlight_body || "",
+    spotlight_intro:
+      settings.spotlight_intro ||
+      "Les rendez-vous importants de la saison sont mis en avant ici pour rester visibles au premier coup d'oeil.",
+    spotlight_background_image:
+      settings.spotlight_background_image ||
+      "https://images.unsplash.com/photo-1517438984742-1262db08379e?auto=format&fit=crop&w=1800&q=80",
     spotlight_cta_label: settings.spotlight_cta_label || "Voir le calendrier",
     spotlight_cta_href: settings.spotlight_cta_href || "https://calendrier.americanfullfightingbons.fr/",
     spotlight_secondary_label: settings.spotlight_secondary_label || "Dossier d'inscription",
     spotlight_secondary_href: settings.spotlight_secondary_href || "https://inscription.americanfullfightingbons.fr/",
+    gallery_intro:
+      settings.gallery_intro ||
+      "Une sélection d'images pour retrouver l'énergie du club, le rythme des séances et les temps forts de la saison.",
     resources_intro: settings.resources_intro || "",
     equipment_intro: settings.equipment_intro || "",
+    schedule_intro:
+      settings.schedule_intro ||
+      "Des créneaux réguliers pour installer de bons repères techniques et physiques tout au long de la semaine.",
+    team_intro:
+      settings.team_intro ||
+      "Un encadrement identifié, présent sur les séances et engagé dans la progression de chaque pratiquant.",
+    pricing_intro_synced: settings.pricing_intro_synced || "Tarifs alignés avec l'inscription en ligne.",
+    pricing_intro_local: settings.pricing_intro_local || "Tarifs actuellement affichés par le club.",
+    highlights_intro:
+      settings.highlights_intro ||
+      "Stages, matériel, progression et moments clés de la saison restent accessibles sans alourdir la navigation.",
     sponsor_title: settings.sponsor_title || "Devenez notre mécène",
+    sponsor_intro:
+      settings.sponsor_intro ||
+      "Le soutien des adhérents, proches et partenaires aide le club à mieux équiper ses pratiquants et à accompagner ses projets.",
     sponsor_body: settings.sponsor_body || "",
     sponsor_cta_label: settings.sponsor_cta_label || "Faire un don",
     sponsor_cta_href: settings.sponsor_cta_href || "mailto:fullfightingbons@gmail.com",
+    contact_intro:
+      settings.contact_intro ||
+      "Pour une question, une séance d'essai ou une demande sur la saison, le club peut être joint directement ici.",
+    contact_map_embed_url:
+      settings.contact_map_embed_url ||
+      "https://www.google.com/maps?q=Gymnase%20Intercommunal%20des%20Voirons%2C%2074890%20Bons-en-Chablais&z=15&output=embed",
+    contact_details_title: settings.contact_details_title || "Coordonnées",
+    contact_email_title: settings.contact_email_title || "E-mail",
+    contact_phone_title: settings.contact_phone_title || "Téléphone",
+    contact_address_title: settings.contact_address_title || "Adresse",
+    contact_form_title: settings.contact_form_title || "Envoyer un message",
+    contact_name_label: settings.contact_name_label || "Nom",
+    contact_email_label: settings.contact_email_label || "E-mail",
+    contact_phone_label: settings.contact_phone_label || "Téléphone",
+    contact_message_label: settings.contact_message_label || "Message",
+    contact_submit_label: settings.contact_submit_label || "Envoyer",
     inpi_note: settings.inpi_note || "",
   };
 }
@@ -308,45 +393,45 @@ async function readSharedPricing(env: Env): Promise<Row[]> {
     {
       id: "shared-base",
       title: "Tarif de base",
-      price_label: `${Number(map.public_inscription_tarif_base || 250)} EUR`,
-      description: "Synchronisé depuis la base du site de gestion.",
-      badge: "Source gestion",
+      price_label: `${Number(map.public_inscription_tarif_base || 250)} €`,
+      description: "Cotisation annuelle pour les cours du club.",
+      badge: "Saison",
       display_order: 1,
     },
     {
       id: "shared-family",
       title: "Tarif famille",
-      price_label: `${Number(map.public_inscription_tarif_famille || 200)} EUR`,
-      description: "Applicable selon les règles définies dans l'inscription.",
-      badge: "Source gestion",
+      price_label: `${Number(map.public_inscription_tarif_famille || 200)} €`,
+      description: "Tarif appliqué selon les conditions prévues pour les familles.",
+      badge: "Réduction",
       display_order: 2,
     },
     {
       id: "shared-pro",
       title: "Tarif professionnel",
-      price_label: `${Number(map.public_inscription_tarif_pro || 125)} EUR`,
+      price_label: `${Number(map.public_inscription_tarif_pro || 125)} €`,
       description: "Forces de l'ordre, pompiers, sécurité et assimilés sur justificatif.",
-      badge: "Source gestion",
+      badge: "Justificatif",
       display_order: 3,
     },
     {
       id: "shared-pass",
       title: "Pass Région",
-      price_label: `${Number(map.public_inscription_pass_region_homme || 30)} / ${Number(
+      price_label: `${Number(map.public_inscription_pass_region_homme || 30)} € / ${Number(
         map.public_inscription_pass_region_femme || 60
-      )} EUR`,
-      description: "Réduction potentielle selon le profil déclaré.",
-      badge: "Source gestion",
+      )} €`,
+      description: "Aide possible selon la situation déclarée lors de l'inscription.",
+      badge: "Aide",
       display_order: 4,
     },
     {
       id: "shared-kit",
       title: "Tenue et passeport",
-      price_label: `${Number(map.public_inscription_supplement_tenue || 40)} + ${Number(
+      price_label: `${Number(map.public_inscription_supplement_tenue || 40)} € + ${Number(
         map.public_inscription_tarif_passeport || 25
-      )} EUR`,
-      description: "Suppléments synchronisés depuis la configuration d'inscription.",
-      badge: "Source gestion",
+      )} €`,
+      description: "Éléments complémentaires selon les besoins de la saison.",
+      badge: "Complément",
       display_order: 5,
     },
   ];
@@ -369,10 +454,35 @@ async function getBootstrap(env: Env): Promise<Row> {
   return {
     site: {
       name: settings.club_name,
+      brandPrimary: settings.brand_primary,
+      brandSecondary: settings.brand_secondary,
       email: settings.contact_email,
       phone: settings.contact_phone,
       address: settings.contact_address,
       footerNote: settings.footer_note,
+    },
+    navigation: {
+      clubLabel: settings.nav_club_label,
+      scheduleLabel: settings.nav_schedule_label,
+      pricingLabel: settings.nav_pricing_label,
+      contactLabel: settings.nav_contact_label,
+      inscriptionLabel: settings.nav_inscription_label,
+      inscriptionHref: settings.nav_inscription_href,
+      calendarLabel: settings.nav_calendar_label,
+      calendarHref: settings.nav_calendar_href,
+      shopLabel: settings.nav_shop_label,
+      shopHref: settings.nav_shop_href,
+    },
+    labels: {
+      quickLinkCta: settings.quick_links_cta_label,
+      contactEmailTitle: settings.contact_email_title,
+      contactPhoneTitle: settings.contact_phone_title,
+      contactAddressTitle: settings.contact_address_title,
+    },
+    design: {
+      siteAmbientImage: settings.site_ambient_image,
+      heroBackgroundImage: settings.hero_background_image,
+      spotlightBackgroundImage: settings.spotlight_background_image,
     },
     hero: {
       kicker: settings.hero_kicker,
@@ -382,6 +492,11 @@ async function getBootstrap(env: Env): Promise<Row> {
       primaryHref: settings.hero_primary_href,
       secondaryLabel: settings.hero_secondary_label,
       secondaryHref: settings.hero_secondary_href,
+      utilityLinks: [
+        { label: settings.hero_link_inscription_label, href: settings.hero_link_inscription_href },
+        { label: settings.hero_link_calendar_label, href: settings.hero_link_calendar_href },
+        { label: settings.hero_link_shop_label, href: settings.hero_link_shop_href },
+      ],
     },
     announcement: {
       badge: settings.announcement_badge,
@@ -389,7 +504,15 @@ async function getBootstrap(env: Env): Promise<Row> {
       body: settings.announcement_body,
     },
     story: settings.club_story,
+    storyPanel: {
+      intro: settings.story_intro,
+      cardTitle: settings.story_card_title,
+      noteLabel: settings.story_note_label,
+      noteTitle: settings.story_note_title,
+      noteBody: settings.story_note_body,
+    },
     spotlight: {
+      intro: settings.spotlight_intro,
       date: settings.spotlight_date,
       title: settings.spotlight_title,
       body: settings.spotlight_body,
@@ -398,13 +521,31 @@ async function getBootstrap(env: Env): Promise<Row> {
       secondaryLabel: settings.spotlight_secondary_label,
       secondaryHref: settings.spotlight_secondary_href,
     },
+    galleryIntro: settings.gallery_intro,
     resourcesIntro: settings.resources_intro,
     equipmentIntro: settings.equipment_intro,
+    scheduleIntro: settings.schedule_intro,
+    teamIntro: settings.team_intro,
+    pricingIntroSynced: settings.pricing_intro_synced,
+    pricingIntroLocal: settings.pricing_intro_local,
+    highlightsIntro: settings.highlights_intro,
     sponsor: {
+      intro: settings.sponsor_intro,
       title: settings.sponsor_title,
       body: settings.sponsor_body,
       ctaLabel: settings.sponsor_cta_label,
       ctaHref: settings.sponsor_cta_href,
+    },
+    contactIntro: settings.contact_intro,
+    contactForm: {
+      mapEmbedUrl: settings.contact_map_embed_url,
+      detailsTitle: settings.contact_details_title,
+      formTitle: settings.contact_form_title,
+      nameLabel: settings.contact_name_label,
+      emailLabel: settings.contact_email_label,
+      phoneLabel: settings.contact_phone_label,
+      messageLabel: settings.contact_message_label,
+      submitLabel: settings.contact_submit_label,
     },
     inpiNote: settings.inpi_note,
     sections,
@@ -444,6 +585,46 @@ async function handleContact(request: Request, env: Env): Promise<Response> {
   )
     .bind(fullName, email, phone, message, ipHash, ua)
     .run();
+
+  const brevoKey = sanitizeText(env.BREVO_API_KEY, 300);
+  const fromEmail = sanitizeText(env.CONTACT_FORM_FROM_EMAIL, 180) || "contact@americanfullfightingbons.fr";
+  const toEmail = sanitizeText(env.CONTACT_FORM_TO_EMAIL, 180) || sanitizeText(env.CONTACT_EMAIL, 180) || "fullfightingbons@gmail.com";
+  if (brevoKey) {
+    const clubName = sanitizeText(env.SITE_NAME, 120) || "American Full Fighting Bons en Chablais";
+    const phoneLine = phone ? `Téléphone : ${phone}\n` : "";
+    const emailPayload = {
+      sender: { email: fromEmail, name: clubName },
+      to: [{ email: toEmail, name: clubName }],
+      replyTo: { email, name: fullName },
+      subject: `[Contact site] ${fullName}`,
+      textContent:
+        `Nouveau message depuis le site ${clubName}\n\n` +
+        `Nom : ${fullName}\n` +
+        `E-mail : ${email}\n` +
+        phoneLine +
+        `Message :\n${message}\n`,
+      htmlContent:
+        `<p><strong>Nouveau message depuis le site ${escapeHtmlText(clubName)}</strong></p>` +
+        `<p><strong>Nom :</strong> ${escapeHtmlText(fullName)}<br>` +
+        `<strong>E-mail :</strong> ${escapeHtmlText(email)}<br>` +
+        `${phone ? `<strong>Téléphone :</strong> ${escapeHtmlText(phone)}<br>` : ""}` +
+        `</p><p><strong>Message :</strong></p><p>${escapeHtmlText(message).replace(/\n/g, "<br>")}</p>`,
+    };
+
+    const brevoResponse = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "api-key": brevoKey,
+      },
+      body: JSON.stringify(emailPayload),
+    });
+    if (!brevoResponse.ok) {
+      const details = await brevoResponse.text();
+      console.error("Brevo send failed", brevoResponse.status, details);
+    }
+  }
+
   return ok({ message: "Votre message a bien été enregistré. Nous vous recontacterons rapidement." });
 }
 
@@ -551,6 +732,18 @@ async function handleAdminSave(request: Request, env: Env): Promise<Response> {
   const payload = (await request.json()) as Row;
   const table = String(payload.table || "") as keyof typeof EDITABLE_TABLES;
   const action = String(payload.action || "");
+
+  // Traitement mark-message en priorité (pas de table nécessaire)
+  if (action === "mark-message") {
+    const id = payload.id;
+    const status = sanitizeText(payload.status, 30);
+    if (!id) return error("Identifiant requis.");
+    const allowedStatuses = ["new", "read", "done"];
+    if (!allowedStatuses.includes(status)) return error("Statut invalide.");
+    await env.DB.prepare("UPDATE contact_messages SET status = ? WHERE id = ?").bind(status, id).run();
+    return ok({ saved: true });
+  }
+
   if (!table || !Object.prototype.hasOwnProperty.call(EDITABLE_TABLES, table)) return error("Table non autorisée.", 400);
 
   if (action === "upsert") {
@@ -584,13 +777,6 @@ async function handleAdminSave(request: Request, env: Env): Promise<Response> {
       .bind(id)
       .run();
     return ok({ deleted: true });
-  }
-
-  if (action === "mark-message") {
-    const id = payload.id;
-    const status = sanitizeText(payload.status, 30);
-    await env.DB.prepare("UPDATE contact_messages SET status = ? WHERE id = ?").bind(status, id).run();
-    return ok({ saved: true });
   }
 
   return error("Action non supportée.");
