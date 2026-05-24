@@ -306,9 +306,6 @@ document.addEventListener("click", async (event) => {
   const btn = event.target.closest("[data-save-settings]");
   if (!btn) return;
 
-  // Empêche l'écouteur générique de admin.js de s'exécuter en parallèle
-  event.stopImmediatePropagation();
-
   const form = document.getElementById("settings-form");
   if (!form) return;
 
