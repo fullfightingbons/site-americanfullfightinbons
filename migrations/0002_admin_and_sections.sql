@@ -19,11 +19,11 @@ CREATE TABLE IF NOT EXISTS admin_users (
 );
 
 INSERT OR IGNORE INTO landing_sections (section_key, title, subtitle, enabled, display_order) VALUES
-  ('story', 'Le club', 'Positionnement, identité et vision du club.', 1, 1),
-  ('schedule', 'Planning', 'Créneaux d''entraînement du club.', 1, 2),
+  ('story', 'Le club', 'Identité, méthode et esprit du club.', 1, 1),
+  ('schedule', 'Planning', 'Les séances de la semaine.', 1, 2),
   ('team', 'Équipe', 'Encadrement et progression sportive.', 1, 3),
-  ('pricing', 'Tarifs', 'Synchronisés avec la configuration d''inscription.', 1, 4),
-  ('highlights', 'Temps forts', 'Stages, boutique, progression.', 1, 5),
+  ('pricing', 'Tarifs', 'Tarifs et informations utiles.', 1, 4),
+  ('highlights', 'Temps forts', 'Stages, matériel et progression.', 1, 5),
   ('gallery', 'Galerie', 'Ambiance et images du club.', 1, 6),
   ('contact', 'Contact', 'Formulaire et coordonnées du club.', 1, 7);
 
