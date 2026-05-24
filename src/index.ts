@@ -355,8 +355,7 @@ function publicResponseSettings(settings: Record<string, string>, env: Env): Rec
       settings.contact_intro ||
       "Pour une question, une séance d'essai ou une demande sur la saison, le club peut être joint directement ici.",
     contact_map_embed_url:
-      settings.contact_map_embed_url ||
-      "https://www.google.com/maps?q=Gymnase%20Intercommunal%20des%20Voirons%2C%2074890%20Bons-en-Chablais&z=15&output=embed",
+      settings.contact_map_embed_url || "",
     contact_details_title: settings.contact_details_title || "Coordonnées",
     contact_email_title: settings.contact_email_title || "E-mail",
     contact_phone_title: settings.contact_phone_title || "Téléphone",
