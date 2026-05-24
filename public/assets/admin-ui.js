@@ -14,15 +14,16 @@ function closeAllModals() {
 }
 
 // Validation URL Google Maps embed
-// Accepte les deux formats :
-//   - https://www.google.com/maps/embed?pb=...   (copié depuis Google Maps → Partager → Intégrer)
-//   - https://www.google.com/maps/embed/v1/...   (généré par le bouton "Générer automatiquement")
+// Bloque uniquement les URL Google Maps normales (non-embed)
+// pour guider l'admin, sans bloquer les URL vides ou inconnues.
 function validateGoogleMapsUrl(url) {
-  if (!url) return false;
-  return (
-    url.startsWith("https://www.google.com/maps/embed?pb=") ||
-    url.startsWith("https://www.google.com/maps/embed/v1/")
-  );
+  if (!url) return true; // champ vide toujours autorisé
+  // URL embed valides
+  if (url.startsWith("https://www.google.com/maps/embed")) return true;
+  // URL Google Maps classiques (non-embed) : on bloque pour guider l'admin
+  if (url.includes("google.com/maps") && !url.includes("/embed")) return false;
+  // Toute autre URL : on laisse passer (permet des solutions tierces)
+  return true;
 }
 
 // Fermeture modales
