@@ -531,6 +531,7 @@ document.addEventListener("click", async (event) => {
 });
 
 async function handleInlineFieldChange(event) {
+  if (!event.target || typeof event.target.closest !== "function") return;
   const input = event.target.closest("[data-kind]");
   if (!input) return;
   // For blur, only save if the value actually changed (avoid spurious saves)

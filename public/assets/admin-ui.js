@@ -34,7 +34,7 @@ document.addEventListener("click", (event) => {
   }
 });
 
-// Prévisualisation Google Maps dans l’admin
+// Prévisualisation Google Maps dans l'admin
 document.addEventListener("input", (event) => {
   if (event.target.name === "contact_map_embed_url") {
     const iframe = document.getElementById("map-preview");
@@ -42,25 +42,25 @@ document.addEventListener("input", (event) => {
   }
 });
 
-// Générateur d’URL Google Maps (sans clé API)
-// Ouvre Google Maps sur l’adresse et guide l’admin pour copier l’URL embed
+// Générateur d'URL Google Maps (sans clé API)
+// Ouvre Google Maps sur l'adresse et guide l'admin pour copier l'URL embed
 document.getElementById("generate-map-url")?.addEventListener("click", () => {
-  const address = prompt(“Entrez l’adresse du club :”);
+  const address = prompt("Entrez l'adresse du club :");
   if (!address) return;
 
   const encoded = encodeURIComponent(address);
 
-  // Ouvre Google Maps dans un nouvel onglet pour que l’admin copie l’URL embed
+  // Ouvre Google Maps dans un nouvel onglet pour que l'admin copie l'URL embed
   window.open(`https://www.google.com/maps/search/?api=1&query=${encoded}`, "_blank");
 
   showStatus(
     "admin-status",
-    "Google Maps s’est ouvert dans un nouvel onglet. Dans Google Maps : cliquez sur « Partager » → « Intégrer une carte » → copiez l’URL src de l’iframe (commence par https://www.google.com/maps/embed?pb=) et collez-la dans le champ ci-dessus.",
+    "Google Maps s'est ouvert dans un nouvel onglet. Dans Google Maps : cliquez sur « Partager » → « Intégrer une carte » → copiez l'URL src de l'iframe (commence par https://www.google.com/maps/embed?pb=) et collez-la dans le champ ci-dessus.",
     false
   );
 });
 
-// Hook modale d’édition
+// Hook modale d'édition
 function openEditModal(config) {
   const form = document.getElementById("modal-editor-form");
   if (!form) return;
@@ -92,7 +92,7 @@ function openEditModal(config) {
   openModal("modal-editor");
 }
 
-// Sauvegarde modale d’édition
+// Sauvegarde modale d'édition
 document.addEventListener("click", async (event) => {
   const btn = event.target.closest("[data-save-modal]");
   if (!btn) return;
