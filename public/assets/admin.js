@@ -530,9 +530,12 @@ document.addEventListener("click", async (event) => {
   }
 });
 
-document.addEventListener("change", async (event) => {
+async function handleInlineFieldChange(event) {
   const input = event.target.closest("[data-kind]");
   if (!input) return;
+  // For blur, only save if the value actually changed (avoid spurious saves)
+  if (event.type === "blur" && !input.dataset.dirty) return;
+  input.dataset.dirty = "";
   try {
     await saveRow(input.dataset.kind, input.dataset.id);
     await loadAdmin();
@@ -540,6 +543,15 @@ document.addEventListener("change", async (event) => {
   } catch (error) {
     showStatus("admin-status", error instanceof Error ? error.message : "Erreur");
   }
+}
+
+document.addEventListener("change", handleInlineFieldChange);
+document.addEventListener("blur", handleInlineFieldChange, true); // capture phase for blur
+
+// Mark field dirty on any input so blur knows a change happened
+document.addEventListener("input", (event) => {
+  const input = event.target.closest("[data-kind]");
+  if (input) input.dataset.dirty = "1";
 });
 
 document.getElementById("login-form").addEventListener("submit", async (event) => {

@@ -252,11 +252,14 @@ document.addEventListener("click", async (event) => {
 // Upload image (à brancher sur /api/admin/upload)
 let uploadContext = null;
 
-function openUploadModal(context) {
-  uploadContext = context; // { kind, id, field }
-  const input = document.getElementById("upload-input");
-  if (input) input.value = "";
-  openModal("modal-upload");
+function openUploadModal(_context) {
+  // Upload endpoint (/api/admin/upload) n'est pas encore implémenté.
+  // Pour ajouter une image, collez directement une URL dans le champ "URL image".
+  showStatus(
+    "admin-status",
+    "L'upload direct n'est pas encore disponible. Collez une URL d'image dans le champ correspondant.",
+    true
+  );
 }
 
 document.addEventListener("click", async (event) => {
