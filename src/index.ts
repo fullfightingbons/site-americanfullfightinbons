@@ -10,6 +10,8 @@ interface Env {
   CONTACT_FORM_TO_EMAIL?: string;
   BREVO_API_KEY?: string;
   SESSION_SECRET?: string;
+  /** Set to "dev" in wrangler.json vars to disable the Secure cookie flag locally */
+  ENV?: string;
 }
 
 type Row = Record<string, unknown>;
@@ -18,6 +20,25 @@ const SESSION_COOKIE = "affbc_site_session";
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const PASSWORD_HASH_PREFIX = "pbkdf2_sha256";
 const MAX_PBKDF2_ITERATIONS = 100000;
+// Simple in-memory rate limiter for login attempts.
+// Resets on worker restart; sufficient as a first line of defence
+// (complement with Cloudflare Rate Limiting Rules for production).
+const loginAttempts = new Map<string, { count: number; resetAt: number }>();
+const LOGIN_MAX_ATTEMPTS = 10;
+const LOGIN_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+
+function checkLoginRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const entry = loginAttempts.get(ip);
+  if (!entry || entry.resetAt < now) {
+    loginAttempts.set(ip, { count: 1, resetAt: now + LOGIN_WINDOW_MS });
+    return true;
+  }
+  if (entry.count >= LOGIN_MAX_ATTEMPTS) return false;
+  entry.count++;
+  return true;
+}
+
 const PUBLIC_TABLES = new Set([
   "site_settings",
   "landing_sections",
@@ -628,6 +649,10 @@ async function handleContact(request: Request, env: Env): Promise<Response> {
 }
 
 async function handleLogin(request: Request, env: Env): Promise<Response> {
+  const loginIp = request.headers.get("cf-connecting-ip") ?? "unknown";
+  if (!checkLoginRateLimit(loginIp)) {
+    return error("Trop de tentatives. Réessayez dans 15 minutes.", 429);
+  }
   const payload = (await request.json()) as Row;
   const email = sanitizeText(payload.email, 190).toLowerCase();
   const password = String(payload.password || "");
@@ -655,7 +680,7 @@ async function handleLogin(request: Request, env: Env): Promise<Response> {
     "Set-Cookie",
     `${SESSION_COOKIE}=${encodeURIComponent(token)}; HttpOnly; Path=/; Max-Age=${Math.floor(
       SESSION_TTL_MS / 1000
-    )}; SameSite=Lax; Secure`
+    )}; SameSite=Lax${env.ENV !== "dev" ? "; Secure" : ""}`
   );
   return response;
 }
@@ -666,11 +691,11 @@ async function handleSession(request: Request, env: Env): Promise<Response> {
   return ok({ user });
 }
 
-async function handleLogout(): Promise<Response> {
+async function handleLogout(env: Env): Promise<Response> {
   const response = ok({ done: true });
   response.headers.append(
     "Set-Cookie",
-    `${SESSION_COOKIE}=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax; Secure`
+    `${SESSION_COOKIE}=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax${env.ENV !== "dev" ? "; Secure" : ""}`
   );
   return response;
 }
@@ -800,7 +825,7 @@ async function routeApi(request: Request, env: Env, pathname: string): Promise<R
     return handleSession(request, env);
   }
   if (pathname === "/api/auth/logout" && request.method === "POST") {
-    return handleLogout();
+    return handleLogout(env);
   }
   if (pathname === "/api/auth/password" && request.method === "POST") {
     return handleChangePassword(request, env);
