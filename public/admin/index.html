@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Administration AFFBC — CMS Premium</title>
+  <title>Administration AFFBC — Visual Builder</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,235 +14,190 @@
 </head>
 <body class="admin-body premium-admin">
 
-  <!-- LOGIN -->
+  <!-- ═══ LOGIN ═══════════════════════════════════════════════ -->
   <section id="login-screen" class="admin-login-screen premium-login">
     <form id="login-form" class="admin-login-card premium-login-card">
       <div class="admin-login-badge premium-login-badge">Espace d'administration</div>
       <h1 class="premium-login-title">Pilotage du site AFFBC</h1>
-      <p class="premium-login-sub">
-        Connectez-vous pour modifier visuellement chaque partie du site public.
-      </p>
-
-      <label class="premium-field">
-        <span>E-mail</span>
-        <input type="email" name="email" required>
-      </label>
-
-      <label class="premium-field">
-        <span>Mot de passe</span>
-        <input type="password" name="password" required>
-      </label>
-
+      <p class="premium-login-sub">Connectez-vous pour modifier visuellement chaque partie du site public.</p>
+      <label class="premium-field"><span>E-mail</span><input type="email" name="email" required autocomplete="email"></label>
+      <label class="premium-field"><span>Mot de passe</span><input type="password" name="password" required autocomplete="current-password"></label>
       <button class="btn btn-red premium-btn" type="submit">Se connecter</button>
       <p id="login-status" class="admin-status premium-status"></p>
     </form>
   </section>
 
-  <!-- APP -->
-  <section id="admin-app" class="admin-app premium-app" hidden>
-    <header class="admin-topbar premium-topbar">
-      <div class="admin-topbar-copy premium-topbar-copy">
-        <div class="brand-name premium-brand-name">AFFBC Admin</div>
-        <div class="admin-topbar-sub premium-topbar-sub">CMS complet du site public</div>
-        <div id="admin-user" class="admin-user-line premium-user-line"></div>
+  <!-- ═══ APP ══════════════════════════════════════════════════ -->
+  <section id="admin-app" class="vb-app" hidden>
+
+    <!-- Topbar -->
+    <header class="vb-topbar">
+      <div class="vb-topbar-left">
+        <button class="vb-sidebar-toggle" id="sidebar-toggle" aria-label="Menu">☰</button>
+        <div class="vb-brand">
+          <span class="vb-brand-name">AFFBC</span>
+          <span class="vb-brand-sep">·</span>
+          <span id="vb-panel-title" class="vb-brand-panel">Tableau de bord</span>
+        </div>
       </div>
-      <div class="admin-topbar-actions premium-topbar-actions">
-        <a class="btn btn-dark premium-btn-secondary" href="/" target="_blank" rel="noreferrer">Voir le site</a>
-        <button id="refresh-button" class="btn btn-dark premium-btn-secondary" type="button">Rafraîchir</button>
-        <button id="logout-button" class="btn btn-red premium-btn" type="button">Déconnexion</button>
+      <div class="vb-topbar-right">
+        <a class="btn btn-dark premium-btn-secondary vb-topbar-btn" href="/" target="_blank" rel="noreferrer">↗ Site public</a>
+        <button id="refresh-button" class="btn btn-dark premium-btn-secondary vb-topbar-btn" type="button">⟳</button>
+        <div id="admin-user" class="vb-user-chip"></div>
+        <button id="logout-button" class="btn btn-red premium-btn vb-topbar-btn" type="button">Déconnexion</button>
       </div>
     </header>
 
-    <main class="admin-main premium-main">
-      <!-- HERO -->
-      <section class="admin-hero premium-admin-hero">
-        <div class="premium-admin-hero-copy">
-          <div class="admin-hero-kicker premium-kicker">Tableau de bord</div>
-          <h1 class="premium-admin-title">Modifier chaque partie du site visuellement.</h1>
-          <p class="premium-admin-sub">
-            Ajoutez, supprimez, réorganisez et modifiez tous les blocs du site public sans écrire une ligne de code.
-          </p>
-        </div>
-        <div class="admin-hero-panel premium-admin-panel">
-          <div class="admin-hero-panel-label premium-panel-label">Aperçu rapide</div>
-          <div id="admin-summary" class="admin-summary premium-summary"></div>
-        </div>
-      </section>
+    <!-- Layout principal -->
+    <div class="vb-layout">
 
-      <!-- GRID -->
-      <section class="admin-grid premium-grid">
+      <!-- ─── SIDEBAR ─────────────────────────────────────── -->
+      <nav class="vb-sidebar" id="vb-sidebar">
+        <div class="vb-sidebar-inner">
 
-        <!-- RÉGLAGES GLOBAUX -->
-        <article class="admin-card premium-card">
-          <div class="admin-card-head premium-card-head">
-            <h2>Réglages globaux</h2>
-            <p>Nom du club, hero, annonce, contact et footer.</p>
-          </div>
-
-          <form id="settings-form" class="admin-form premium-form"></form>
-
-          <!-- Google Maps preview + générateur -->
-          <div class="map-preview-wrapper">
-            <iframe id="map-preview" class="map-preview" loading="lazy"></iframe>
-          </div>
-          <div class="admin-actions" style="margin-top:0.5rem;">
-            <button class="btn btn-dark premium-btn-secondary" type="button" id="generate-map-url">
-              Générer automatiquement l’URL Google Maps
+          <!-- Dashboard -->
+          <div class="vb-nav-group">
+            <button class="vb-nav-item vb-nav-item--active" data-panel="dashboard">
+              <span class="vb-nav-icon">⊞</span>
+              <span class="vb-nav-label">Tableau de bord</span>
             </button>
           </div>
 
-          <div class="admin-actions" style="margin-top:0.75rem;">
-            <button class="btn btn-red premium-btn" type="button" data-save-settings>Enregistrer les réglages</button>
+          <!-- Contenu -->
+          <div class="vb-nav-group">
+            <div class="vb-nav-group-label">Contenu</div>
+            <button class="vb-nav-item" data-panel="settings-identite">
+              <span class="vb-nav-icon">◈</span>
+              <span class="vb-nav-label">Identité</span>
+            </button>
+            <button class="vb-nav-item" data-panel="settings-navigation">
+              <span class="vb-nav-icon">↗</span>
+              <span class="vb-nav-label">Navigation</span>
+            </button>
+            <button class="vb-nav-item" data-panel="settings-hero">
+              <span class="vb-nav-icon">▲</span>
+              <span class="vb-nav-label">Hero</span>
+            </button>
+            <button class="vb-nav-item" data-panel="settings-club">
+              <span class="vb-nav-icon">⬡</span>
+              <span class="vb-nav-label">Club</span>
+            </button>
+            <button class="vb-nav-item" data-panel="settings-spotlight">
+              <span class="vb-nav-icon">★</span>
+              <span class="vb-nav-label">À la une</span>
+            </button>
+            <button class="vb-nav-item" data-panel="settings-sections-intro">
+              <span class="vb-nav-icon">¶</span>
+              <span class="vb-nav-label">Intros sections</span>
+            </button>
+            <button class="vb-nav-item" data-panel="settings-contact">
+              <span class="vb-nav-icon">✉</span>
+              <span class="vb-nav-label">Contact</span>
+            </button>
+            <button class="vb-nav-item" data-panel="settings-mecenat">
+              <span class="vb-nav-icon">♦</span>
+              <span class="vb-nav-label">Mécénat</span>
+            </button>
           </div>
-        </article>
 
-        <!-- SECTIONS -->
-        <article class="admin-card premium-card">
-          <div class="admin-card-head premium-card-head">
-            <h2>Sections de page</h2>
-            <p>Activez, renommez ou réordonnez les blocs de la page d'accueil.</p>
+          <!-- Listes -->
+          <div class="vb-nav-group">
+            <div class="vb-nav-group-label">Listes</div>
+            <button class="vb-nav-item" data-panel="schedule">
+              <span class="vb-nav-icon">⏱</span>
+              <span class="vb-nav-label">Planning</span>
+            </button>
+            <button class="vb-nav-item" data-panel="team">
+              <span class="vb-nav-icon">👥</span>
+              <span class="vb-nav-label">Équipe</span>
+            </button>
+            <button class="vb-nav-item" data-panel="highlights">
+              <span class="vb-nav-icon">◈</span>
+              <span class="vb-nav-label">Temps forts</span>
+            </button>
+            <button class="vb-nav-item" data-panel="gallery">
+              <span class="vb-nav-icon">⬚</span>
+              <span class="vb-nav-label">Galerie</span>
+            </button>
+            <button class="vb-nav-item" data-panel="links">
+              <span class="vb-nav-icon">⛓</span>
+              <span class="vb-nav-label">Liens rapides</span>
+            </button>
+            <button class="vb-nav-item" data-panel="resources">
+              <span class="vb-nav-icon">📂</span>
+              <span class="vb-nav-label">Ressources</span>
+            </button>
+            <button class="vb-nav-item" data-panel="equipment">
+              <span class="vb-nav-icon">🥊</span>
+              <span class="vb-nav-label">Équipement</span>
+            </button>
           </div>
-          <div id="sections-editor" class="admin-list premium-list"></div>
-          <div class="admin-actions">
-            <button class="btn btn-dark premium-btn-secondary" type="button" data-add="sections">Ajouter une section</button>
-          </div>
-        </article>
 
-        <!-- PLANNING -->
-        <article class="admin-card premium-card">
-          <div class="admin-card-head premium-card-head">
-            <h2>Planning</h2>
-            <p>Créneaux hebdomadaires affichés sur la page publique.</p>
+          <!-- Gestion -->
+          <div class="vb-nav-group">
+            <div class="vb-nav-group-label">Gestion</div>
+            <button class="vb-nav-item" data-panel="pricing">
+              <span class="vb-nav-icon">€</span>
+              <span class="vb-nav-label">Tarifs</span>
+            </button>
+            <button class="vb-nav-item" data-panel="messages">
+              <span class="vb-nav-icon">✉</span>
+              <span class="vb-nav-label">Messages</span>
+              <span class="vb-nav-badge" id="messages-badge"></span>
+            </button>
+            <button class="vb-nav-item" data-panel="password">
+              <span class="vb-nav-icon">🔒</span>
+              <span class="vb-nav-label">Mot de passe</span>
+            </button>
           </div>
-          <div id="schedule-editor" class="admin-list premium-list"></div>
-          <div class="admin-actions">
-            <button class="btn btn-dark premium-btn-secondary" type="button" data-add="schedule">Ajouter un créneau</button>
-          </div>
-        </article>
 
-        <!-- ÉQUIPE -->
-        <article class="admin-card premium-card">
-          <div class="admin-card-head premium-card-head">
-            <h2>Équipe</h2>
-            <p>Encadrants, rôles et présentation du staff.</p>
-          </div>
-          <div id="team-editor" class="admin-list premium-list"></div>
-          <div class="admin-actions">
-            <button class="btn btn-dark premium-btn-secondary" type="button" data-add="team">Ajouter un membre</button>
-          </div>
-        </article>
+        </div>
+      </nav>
 
-        <!-- TEMPS FORTS -->
-        <article class="admin-card premium-card">
-          <div class="admin-card-head premium-card-head">
-            <h2>Temps forts</h2>
-            <p>Blocs de mise en avant pour stages, progression ou informations clés.</p>
-          </div>
-          <div id="highlights-editor" class="admin-list premium-list"></div>
-          <div class="admin-actions">
-            <button class="btn btn-dark premium-btn-secondary" type="button" data-add="highlights">Ajouter un encart</button>
-          </div>
-        </article>
+      <!-- ─── PANNEAU PRINCIPAL ──────────────────────────── -->
+      <main class="vb-main">
 
-        <!-- GALERIE -->
-        <article class="admin-card premium-card">
-          <div class="admin-card-head premium-card-head">
-            <h2>Galerie</h2>
-            <p>Visuels de la vie du club et des entraînements.</p>
-          </div>
-          <div id="gallery-editor" class="admin-list premium-list"></div>
-          <div class="admin-actions">
-            <button class="btn btn-dark premium-btn-secondary" type="button" data-add="gallery">Ajouter une image</button>
-          </div>
-        </article>
+        <!-- Status toast global -->
+        <div id="admin-status" class="vb-status" hidden></div>
 
-        <!-- LIENS UTILES -->
-        <article class="admin-card premium-card">
-          <div class="admin-card-head premium-card-head">
-            <h2>Liens utiles</h2>
-            <p>Accès rapides mis en avant en haut de la page.</p>
-          </div>
-          <div id="links-editor" class="admin-list premium-list"></div>
-          <div class="admin-actions">
-            <button class="btn btn-dark premium-btn-secondary" type="button" data-add="links">Ajouter un lien</button>
-          </div>
-        </article>
+        <!-- Dashboard -->
+        <div class="vb-panel" data-panel="dashboard" id="panel-dashboard"></div>
 
-        <!-- RESSOURCES -->
-        <article class="admin-card premium-card">
-          <div class="admin-card-head premium-card-head">
-            <h2>Ressources membres</h2>
-            <p>Accès pratiques pour suivre et préparer la saison.</p>
-          </div>
-          <div id="resources-editor" class="admin-list premium-list"></div>
-          <div class="admin-actions">
-            <button class="btn btn-dark premium-btn-secondary" type="button" data-add="resources">Ajouter une ressource</button>
-          </div>
-        </article>
+        <!-- Réglages par groupe -->
+        <div class="vb-panel" data-panel="settings-identite" id="panel-settings-identite" hidden></div>
+        <div class="vb-panel" data-panel="settings-navigation" id="panel-settings-navigation" hidden></div>
+        <div class="vb-panel" data-panel="settings-hero" id="panel-settings-hero" hidden></div>
+        <div class="vb-panel" data-panel="settings-club" id="panel-settings-club" hidden></div>
+        <div class="vb-panel" data-panel="settings-spotlight" id="panel-settings-spotlight" hidden></div>
+        <div class="vb-panel" data-panel="settings-sections-intro" id="panel-settings-sections-intro" hidden></div>
+        <div class="vb-panel" data-panel="settings-contact" id="panel-settings-contact" hidden></div>
+        <div class="vb-panel" data-panel="settings-mecenat" id="panel-settings-mecenat" hidden></div>
 
-        <!-- ÉQUIPEMENT -->
-        <article class="admin-card premium-card">
-          <div class="admin-card-head premium-card-head">
-            <h2>Équipement</h2>
-            <p>Matériel recommandé et liens vers la sélection du club.</p>
-          </div>
-          <div id="equipment-editor" class="admin-list premium-list"></div>
-          <div class="admin-actions">
-            <button class="btn btn-dark premium-btn-secondary" type="button" data-add="equipment">Ajouter un équipement</button>
-          </div>
-        </article>
+        <!-- Entités -->
+        <div class="vb-panel" data-panel="schedule" id="panel-schedule" hidden></div>
+        <div class="vb-panel" data-panel="team" id="panel-team" hidden></div>
+        <div class="vb-panel" data-panel="highlights" id="panel-highlights" hidden></div>
+        <div class="vb-panel" data-panel="gallery" id="panel-gallery" hidden></div>
+        <div class="vb-panel" data-panel="links" id="panel-links" hidden></div>
+        <div class="vb-panel" data-panel="resources" id="panel-resources" hidden></div>
+        <div class="vb-panel" data-panel="equipment" id="panel-equipment" hidden></div>
 
-        <!-- TARIFS -->
-        <article class="admin-card premium-card">
-          <div class="admin-card-head premium-card-head">
-            <h2>Tarifs affichés</h2>
-            <p>Ces montants viennent du parcours d'inscription.</p>
-          </div>
-          <p class="admin-note premium-note">Pour les modifier, mettez à jour la configuration publique de l'inscription.</p>
-          <div id="pricing-readonly" class="admin-list premium-list"></div>
-        </article>
+        <!-- Gestion -->
+        <div class="vb-panel" data-panel="pricing" id="panel-pricing" hidden></div>
+        <div class="vb-panel" data-panel="messages" id="panel-messages" hidden></div>
+        <div class="vb-panel" data-panel="password" id="panel-password" hidden></div>
 
-        <!-- MESSAGES -->
-        <article class="admin-card premium-card">
-          <div class="admin-card-head premium-card-head">
-            <h2>Messages reçus</h2>
-            <p>Demandes de contact, essais et questions envoyées depuis le site.</p>
-          </div>
-          <div id="messages-editor" class="admin-list premium-list"></div>
-        </article>
+      </main>
+    </div>
 
-        <!-- MOT DE PASSE -->
-        <article class="admin-card premium-card">
-          <div class="admin-card-head premium-card-head">
-            <h2>Mot de passe</h2>
-            <p>Mettez à jour l'accès administrateur.</p>
-          </div>
-          <form id="password-form" class="admin-form premium-form">
-            <label class="premium-field">
-              <span>Mot de passe actuel</span>
-              <input type="password" name="currentPassword" required>
-            </label>
-            <label class="premium-field">
-              <span>Nouveau mot de passe</span>
-              <input type="password" name="nextPassword" required>
-            </label>
-          </form>
-          <div class="admin-actions">
-            <button class="btn btn-red premium-btn" type="button" data-change-password>Mettre à jour</button>
-          </div>
-        </article>
+    <!-- ═══ MODALES ═══════════════════════════════════════════ -->
 
-      </section>
-
-      <p id="admin-status" class="admin-status admin-status-global premium-status-global"></p>
-    </main>
-
-    <!-- MODALES -->
+    <!-- Éditeur -->
     <div id="modal-editor" class="cms-modal" hidden>
       <div class="cms-modal-content premium-modal">
         <button class="cms-modal-close" data-close-modal>×</button>
-        <h2 class="premium-modal-title">Modifier l’élément</h2>
-        <p class="premium-modal-sub">Ajustez le contenu visuellement puis enregistrez.</p>
+        <h2 class="premium-modal-title">Modifier l'élément</h2>
+        <p class="premium-modal-sub">Ajustez le contenu puis enregistrez.</p>
         <form id="modal-editor-form" class="cms-modal-form premium-form"></form>
         <div class="cms-modal-actions">
           <button class="btn btn-dark premium-btn-secondary" data-close-modal>Annuler</button>
@@ -251,6 +206,7 @@
       </div>
     </div>
 
+    <!-- Suppression -->
     <div id="modal-delete" class="cms-modal" hidden>
       <div class="cms-modal-content premium-modal">
         <button class="cms-modal-close" data-close-modal>×</button>
@@ -263,6 +219,7 @@
       </div>
     </div>
 
+    <!-- Upload -->
     <div id="modal-upload" class="cms-modal" hidden>
       <div class="cms-modal-content premium-modal">
         <button class="cms-modal-close" data-close-modal>×</button>
@@ -281,11 +238,12 @@
       </div>
     </div>
 
+    <!-- Réordonnancement -->
     <div id="modal-order" class="cms-modal" hidden>
       <div class="cms-modal-content premium-modal">
         <button class="cms-modal-close" data-close-modal>×</button>
         <h2 class="premium-modal-title">Réorganiser</h2>
-        <p class="premium-modal-sub">Glissez-déposez pour changer l’ordre.</p>
+        <p class="premium-modal-sub">Glissez-déposez pour changer l'ordre.</p>
         <div id="order-list" class="order-list premium-order-list"></div>
         <div class="cms-modal-actions">
           <button class="btn btn-dark premium-btn-secondary" data-close-modal>Annuler</button>
@@ -296,7 +254,15 @@
 
   </section>
 
+  <!-- Scripts -->
   <script src="/assets/admin.js" defer></script>
   <script src="/assets/admin-ui.js" defer></script>
+
+  <!-- Toggle sidebar mobile -->
+  <script>
+    document.getElementById("sidebar-toggle")?.addEventListener("click", () => {
+      document.getElementById("vb-sidebar")?.classList.toggle("vb-sidebar--open");
+    });
+  </script>
 </body>
 </html>
