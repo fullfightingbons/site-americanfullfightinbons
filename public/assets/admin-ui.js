@@ -41,22 +41,22 @@ document.addEventListener("input", (event) => {
   }
 });
 
-// Générateur d’URL Google Maps (avec API key)
+// Générateur d’URL Google Maps (sans clé API)
+// Ouvre Google Maps sur l’adresse et guide l’admin pour copier l’URL embed
 document.getElementById("generate-map-url")?.addEventListener("click", () => {
-  const address = prompt("Entrez l’adresse du club :");
+  const address = prompt(“Entrez l’adresse du club :”);
   if (!address) return;
 
   const encoded = encodeURIComponent(address);
-  const embedUrl = `https://www.google.com/maps/embed/v1/place?key=YOUR_API_KEY&q=${encoded}`;
 
-  const input = document.querySelector("textarea[name='contact_map_embed_url']");
-  if (input) {
-    input.value = embedUrl;
-    const iframe = document.getElementById("map-preview");
-    if (iframe) iframe.src = embedUrl;
-  }
+  // Ouvre Google Maps dans un nouvel onglet pour que l’admin copie l’URL embed
+  window.open(`https://www.google.com/maps/search/?api=1&query=${encoded}`, "_blank");
 
-  showStatus("admin-status", "URL générée automatiquement. Remplacez YOUR_API_KEY par votre clé.", false);
+  showStatus(
+    "admin-status",
+    "Google Maps s’est ouvert dans un nouvel onglet. Dans Google Maps : cliquez sur « Partager » → « Intégrer une carte » → copiez l’URL src de l’iframe (commence par https://www.google.com/maps/embed?pb=) et collez-la dans le champ ci-dessus.",
+    false
+  );
 });
 
 // Hook modale d’édition
