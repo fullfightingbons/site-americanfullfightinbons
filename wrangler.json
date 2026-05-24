@@ -17,16 +17,20 @@
     "enabled": true
   },
   "vars": {
+    "ENV": "dev",
     "SITE_NAME": "American Full Fighting Bons en Chablais",
     "CONTACT_EMAIL": "fullfightingbons@gmail.com",
     "CONTACT_PHONE": "0699958177",
-    "CONTACT_ADDRESS": "15 place Henri Boucher, 74890 Bons-en-Chablais"
+    "CONTACT_ADDRESS": "15 place Henri Boucher, 74890 Bons-en-Chablais",
+    "CONTACT_FORM_FROM_EMAIL": "contact@americanfullfightingbons.fr",
+    "CONTACT_FORM_TO_EMAIL": "fullfightingbons@gmail.com"
   },
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "site-americanfullfightinbons",
-      "database_id": "59b6ffb0-a703-4acb-b465-8fb037c9d79c"
+      "database_id": "59b6ffb0-a703-4acb-b465-8fb037c9d79c",
+      "migrations_dir": "migrations"
     },
     {
       "binding": "AFFBC_DB",

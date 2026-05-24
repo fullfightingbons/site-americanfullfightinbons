@@ -3,12 +3,17 @@
 // Runtime types generated with workerd@1.20260515.1 2026-05-22 
 interface __BaseEnv_Env {
 	DB: D1Database;
-	AFFBC_DB: D1Database;
+	AFFBC_DB?: D1Database;
 	ASSETS: Fetcher;
+	ENV?: string;
 	SITE_NAME: "American Full Fighting Bons en Chablais";
 	CONTACT_EMAIL: "fullfightingbons@gmail.com";
 	CONTACT_PHONE: "0699958177";
 	CONTACT_ADDRESS: "15 place Henri Boucher, 74890 Bons-en-Chablais";
+	CONTACT_FORM_FROM_EMAIL: "contact@americanfullfightingbons.fr";
+	CONTACT_FORM_TO_EMAIL: "fullfightingbons@gmail.com";
+	BREVO_API_KEY?: string;
+	SESSION_SECRET?: string;
 }
 declare namespace Cloudflare {
 	interface GlobalProps {
