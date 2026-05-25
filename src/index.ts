@@ -722,7 +722,7 @@ async function handleChangePassword(request: Request, env: Env): Promise<Respons
 }
 
 async function requireAdmin(request: Request, env: Env): Promise<Row> {
-  const user = await getCurrentUser(request, env);
+  const user = (await getCurrentUser(request, env)) ?? (await getUserFromBearer(request, env));
   if (!user) throw new Error("Unauthorized");
   return user;
 }
@@ -806,6 +806,56 @@ async function handleAdminSave(request: Request, env: Env): Promise<Response> {
   return error("Action non supportée.");
 }
 
+// ─── Login pour le Visual Builder (password seul → Bearer token) ─────────────
+
+async function handleAdminLogin(request: Request, env: Env): Promise<Response> {
+  const loginIp = request.headers.get("cf-connecting-ip") ?? "unknown";
+  if (!checkLoginRateLimit(loginIp)) {
+    return error("Trop de tentatives. Réessayez dans 15 minutes.", 429);
+  }
+  const payload = (await request.json()) as Row;
+  const password = String(payload.password || "");
+  if (!password) return error("Mot de passe requis.");
+
+  // Cherche n'importe quel admin actif dont le mot de passe correspond
+  const users = await readTable<Row>(
+    env.DB,
+    "SELECT * FROM admin_users WHERE active = 1"
+  );
+  let matched: Row | null = null;
+  for (const user of users) {
+    if (await verifyPassword(password, user.password_hash)) {
+      matched = user;
+      break;
+    }
+  }
+  if (!matched) return error("Mot de passe incorrect.", 401);
+
+  // Réutilise le même mécanisme HMAC que les sessions cookie,
+  // mais on le renvoie en tant que token Bearer (JSON).
+  const token = await createSessionToken(
+    { userId: String(matched.id), expiresAt: Date.now() + SESSION_TTL_MS },
+    env
+  );
+  return ok({ token });
+}
+
+// ─── Vérification Bearer token (pour les routes /api/admin/*) ────────────────
+
+async function getUserFromBearer(request: Request, env: Env): Promise<Row | null> {
+  const authHeader = request.headers.get("Authorization") || "";
+  if (!authHeader.startsWith("Bearer ")) return null;
+  const token = authHeader.slice(7).trim();
+  if (!token || token === "dev") return null;
+  const session = await parseSessionToken(token, env);
+  if (!session || !session.userId || Number(session.expiresAt) < Date.now()) return null;
+  return env.DB.prepare(
+    "SELECT id, email, display_name, active FROM admin_users WHERE id = ? AND active = 1"
+  )
+    .bind(session.userId)
+    .first<Row>();
+}
+
 async function routeApi(request: Request, env: Env, pathname: string): Promise<Response> {
   if (request.method === "OPTIONS") return withHeaders(new Response(null, { status: 204 }));
 
@@ -830,7 +880,19 @@ async function routeApi(request: Request, env: Env, pathname: string): Promise<R
   if (pathname === "/api/auth/password" && request.method === "POST") {
     return handleChangePassword(request, env);
   }
+  // Visual Builder login (password seul, retourne un Bearer token)
+  if (pathname === "/api/admin/login" && request.method === "POST") {
+    return handleAdminLogin(request, env);
+  }
+
+  // Routes admin : accepte aussi bien le cookie de session que le Bearer token
   if (pathname === "/api/admin/bootstrap" && request.method === "GET") {
+    // Tente d'abord le cookie, puis le Bearer token
+    const cookieUser = await getCurrentUser(request, env);
+    if (!cookieUser) {
+      const bearerUser = await getUserFromBearer(request, env);
+      if (!bearerUser) return error("Unauthorized", 401);
+    }
     return adminBootstrap(request, env);
   }
   if (pathname === "/api/admin/content" && request.method === "POST") {
