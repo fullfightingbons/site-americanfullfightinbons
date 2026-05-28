@@ -164,6 +164,7 @@ const SETTINGS_GROUPS = [
       ["gallery_intro", "Intro galerie"],
       ["resources_intro", "Intro ressources"],
       ["equipment_intro", "Intro équipement"],
+      ["sponsors_intro", "Intro sponsors"],
       ["sponsor_intro", "Intro mécénat"],
       ["contact_intro", "Intro contact"],
     ],
@@ -234,6 +235,7 @@ const SECTION_KEYS = [
   { key: "gallery", label: "Galerie", icon: "⬚" },
   { key: "resources", label: "Ressources", icon: "📂" },
   { key: "equipment", label: "Équipement", icon: "🥊" },
+  { key: "sponsors", label: "Sponsors", icon: "★" },
   { key: "sponsor", label: "Mécénat", icon: "♦" },
   { key: "custom", label: "Blocs libres", icon: "▦" },
   { key: "contact", label: "Contact", icon: "✉" },
@@ -683,7 +685,7 @@ function renderSectionTextCard(item) {
 }
 
 function renderEntityCard(kind, item, fields) {
-  const titleField = item.title || item.label || item.full_name || item.day_label || "Élément";
+  const titleField = item.title || item.name || item.label || item.full_name || item.day_label || "Élément";
   const imageField = fields.find((field) => field.type === "image" && item[field.key]);
   return `
     <div class="vb-entity-card" data-card-kind="${escapeHtml(kind)}" data-card-id="${escapeHtml(item.id)}">
@@ -786,6 +788,15 @@ const EQUIPMENT_FIELDS = [
   { key: "display_order", label: "Ordre", type: "number" },
   { key: "description", label: "Description", type: "textarea" },
   { key: "image_url", label: "Photo", type: "image" },
+];
+
+const SPONSOR_PARTNER_FIELDS = [
+  { key: "name", label: "Nom du sponsor" },
+  { key: "website_url", label: "Lien site web" },
+  { key: "logo_url", label: "Logo ou photo", type: "image" },
+  { key: "enabled", label: "Publié", type: "checkbox" },
+  { key: "display_order", label: "Ordre", type: "number" },
+  { key: "description", label: "Texte associé", type: "textarea" },
 ];
 
 const SECTION_TEXT_FIELDS = [
@@ -938,6 +949,7 @@ function renderAll() {
   renderEntityPanel("blocks", "blocks", state.customBlocks || [], BLOCK_FIELDS, "Ajouter un bloc");
   renderEntityPanel("resources", "resources", state.resources || [], RESOURCES_FIELDS, "Ajouter une ressource");
   renderEntityPanel("equipment", "equipment", state.equipment || [], EQUIPMENT_FIELDS, "Ajouter un équipement");
+  renderEntityPanel("sponsors", "sponsors", state.sponsors || [], SPONSOR_PARTNER_FIELDS, "Ajouter un sponsor");
 
   renderMessagesPanel();
   renderPricingPanel();
@@ -1041,6 +1053,7 @@ async function loadAdmin() {
     gallery_intro: state.galleryIntro,
     resources_intro: state.resourcesIntro,
     equipment_intro: state.equipmentIntro,
+    sponsors_intro: state.sponsorsIntro,
     sponsor_intro: state.sponsor?.intro,
     sponsor_title: state.sponsor?.title,
     sponsor_body: state.sponsor?.body,
@@ -1098,6 +1111,7 @@ function kindConfig(kind) {
     blocks: { table: "custom_blocks", items: state?.customBlocks },
     resources: { table: "resource_cards", items: state?.resources },
     equipment: { table: "equipment_items", items: state?.equipment },
+    sponsors: { table: "sponsor_partners", items: state?.sponsors },
     pricing: { table: "pricing_plans", items: state?.pricing },
   };
   return map[kind];
@@ -1118,6 +1132,7 @@ function buildNewItem(kind) {
     blocks: (state?.customBlocks || []).length,
     resources: (state?.resources || []).length,
     equipment: (state?.equipment || []).length,
+    sponsors: (state?.sponsors || []).length,
     pricing: (state?.pricing || []).length,
   };
   const order = (counts[kind] || 0) + 1;
@@ -1133,6 +1148,7 @@ function buildNewItem(kind) {
     blocks: { id, title: "Nouveau bloc", body: "", image_url: "", cta_label: "Ouvrir", cta_href: "", width_percent: 100, height_px: 360, enabled: 1, display_order: order },
     resources: { id, title: "Nouvelle ressource", cta_label: "Ouvrir", cta_href: "https://", description: "", image_url: "", display_order: order },
     equipment: { id, title: "Nouvel équipement", cta_label: "Voir", cta_href: "https://", description: "", image_url: "", display_order: order },
+    sponsors: { id, name: "Nouveau sponsor", description: "", website_url: "https://", logo_url: "", enabled: 1, display_order: order },
     pricing: { id, title: "Nouveau tarif", price_label: "", description: "", badge: "", enabled: 1, display_order: order },
   };
   return defaults[kind] || null;
@@ -1350,6 +1366,7 @@ document.addEventListener("click", async (event) => {
       links: LINKS_FIELDS,
       resources: RESOURCES_FIELDS,
       equipment: EQUIPMENT_FIELDS,
+      sponsors: SPONSOR_PARTNER_FIELDS,
       buttons: BUTTON_FIELDS,
       blocks: BLOCK_FIELDS,
       pricing: PRICING_FIELDS,

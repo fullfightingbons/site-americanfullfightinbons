@@ -55,6 +55,7 @@ const PUBLIC_TABLES = new Set([
   "pricing_plans",
   "resource_cards",
   "equipment_items",
+  "sponsor_partners",
 ]);
 
 const EDITABLE_TABLES = {
@@ -98,6 +99,10 @@ const EDITABLE_TABLES = {
   equipment_items: {
     primaryKey: "id",
     allowedColumns: ["id", "title", "description", "cta_label", "cta_href", "image_url", "display_order"],
+  },
+  sponsor_partners: {
+    primaryKey: "id",
+    allowedColumns: ["id", "name", "description", "website_url", "logo_url", "enabled", "display_order"],
   },
   pricing_plans: {
     primaryKey: "id",
@@ -412,6 +417,7 @@ function publicResponseSettings(settings: Record<string, string>, env: Env): Rec
       "Une sélection d'images pour retrouver l'énergie du club, le rythme des séances et les temps forts de la saison.",
     resources_intro: settings.resources_intro || "",
     equipment_intro: settings.equipment_intro || "",
+    sponsors_intro: settings.sponsors_intro || "Merci aux partenaires qui accompagnent le club et soutiennent ses projets.",
     schedule_intro:
       settings.schedule_intro ||
       "Des créneaux réguliers pour installer de bons repères techniques et physiques tout au long de la semaine.",
@@ -636,7 +642,7 @@ async function getHelloAssoCheckoutIntent(
 
 async function getBootstrap(env: Env): Promise<Row> {
   const settings = publicResponseSettings(await readSettingsMap(env.DB), env);
-  const [sections, schedule, team, highlights, gallery, links, customButtons, customBlocks, resources, equipment, fallbackPricing, sharedPricing] = await Promise.all([
+  const [sections, schedule, team, highlights, gallery, links, customButtons, customBlocks, resources, equipment, sponsors, fallbackPricing, sharedPricing] = await Promise.all([
     readTable(env.DB, "SELECT * FROM landing_sections ORDER BY display_order, id"),
     readTable(env.DB, "SELECT * FROM schedule_slots ORDER BY display_order, id"),
     readTable(env.DB, "SELECT * FROM team_members ORDER BY display_order, id"),
@@ -647,6 +653,7 @@ async function getBootstrap(env: Env): Promise<Row> {
     readTable(env.DB, "SELECT * FROM custom_blocks ORDER BY display_order, id"),
     readTable(env.DB, "SELECT * FROM resource_cards ORDER BY display_order, id"),
     readTable(env.DB, "SELECT * FROM equipment_items ORDER BY display_order, id"),
+    readTable(env.DB, "SELECT * FROM sponsor_partners ORDER BY display_order, id"),
     readTable(env.DB, "SELECT * FROM pricing_plans ORDER BY display_order, id"),
     readSharedPricing(env),
   ]);
@@ -756,6 +763,7 @@ async function getBootstrap(env: Env): Promise<Row> {
     galleryIntro: settings.gallery_intro,
     resourcesIntro: settings.resources_intro,
     equipmentIntro: settings.equipment_intro,
+    sponsorsIntro: settings.sponsors_intro,
     scheduleIntro: settings.schedule_intro,
     teamIntro: settings.team_intro,
     pricingIntroSynced: settings.pricing_intro_synced,
@@ -814,6 +822,7 @@ async function getBootstrap(env: Env): Promise<Row> {
     customBlocks,
     resources,
     equipment,
+    sponsors,
     pricing: mergePricing(sharedPricing, fallbackPricing),
     pricingSource: sharedPricing.length ? "gestion" : "local",
   };

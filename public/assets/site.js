@@ -457,6 +457,37 @@ function renderEquipmentSection(data, section) {
   `;
 }
 
+function renderSponsorsSection(data, section) {
+  const sponsors = (data.sponsors || [])
+    .filter((item) => Number(item.enabled ?? 1) === 1)
+    .sort((a, b) => Number(a.display_order) - Number(b.display_order));
+  return `
+    <section class="section-shell">
+      <div class="section-head">
+        <div>
+          <div class="section-tag">${escapeHtml(section.title || "Sponsors")}</div>
+          <h2>${escapeHtml(section.subtitle || "Ils soutiennent le club")}</h2>
+        </div>
+        <p>${escapeHtml(data.sponsorsIntro || "Merci aux partenaires qui accompagnent le club et soutiennent ses projets.")}</p>
+      </div>
+      <div class="sponsors-grid">
+        ${sponsors
+          .map(
+            (item) => `
+          <article class="sponsor-partner-card">
+            ${item.logo_url ? `<img src="${escapeHtml(item.logo_url)}" alt="${escapeHtml(item.name)}" loading="lazy">` : ""}
+            <h3>${escapeHtml(item.name)}</h3>
+            <p>${escapeHtml(item.description || "")}</p>
+            ${item.website_url ? `<a class="cta" href="${escapeHtml(item.website_url)}" target="_blank" rel="noreferrer">Voir le site</a>` : ""}
+          </article>
+        `
+          )
+          .join("")}
+      </div>
+    </section>
+  `;
+}
+
 function renderSponsorSection(data, section) {
   const suggestedAmounts = data.sponsor?.checkoutSuggestedAmounts || [];
   const minAmount = Number.parseInt(data.sponsor?.checkoutMinAmountEur || "5", 10) || 5;
@@ -582,6 +613,7 @@ function renderSections(data) {
     gallery: renderGallerySection,
     resources: renderResourcesSection,
     equipment: renderEquipmentSection,
+    sponsors: renderSponsorsSection,
     sponsor: renderSponsorSection,
     custom: renderCustomSection,
     contact: renderContactSection,
