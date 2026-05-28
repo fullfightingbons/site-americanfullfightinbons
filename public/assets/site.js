@@ -312,6 +312,7 @@ function renderPricingSection(data, section) {
       </div>
       <div class="pricing-grid">
         ${(data.pricing || [])
+          .filter((item) => Number(item.enabled ?? 1) === 1)
           .map(
             (item) => `
           <article class="pricing-card">

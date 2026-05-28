@@ -101,7 +101,7 @@ const EDITABLE_TABLES = {
   },
   pricing_plans: {
     primaryKey: "id",
-    allowedColumns: ["id", "title", "price_label", "description", "badge", "display_order"],
+    allowedColumns: ["id", "title", "price_label", "description", "badge", "enabled", "display_order"],
   },
   admin_users: {
     primaryKey: "id",
@@ -538,6 +538,20 @@ async function readSharedPricing(env: Env): Promise<Row[]> {
   }
 }
 
+function mergePricing(sharedPricing: Row[], localPricing: Row[]): Row[] {
+  if (!sharedPricing.length) {
+    return localPricing.map((item) => ({ enabled: 1, ...item }));
+  }
+
+  const overrides = new Map(localPricing.map((item) => [String(item.id), item]));
+  return sharedPricing
+    .map<Row>((item) => {
+      const override = overrides.get(String(item.id));
+      return { enabled: 1, ...item, ...(override || {}) };
+    })
+    .sort((a, b) => Number(a.display_order) - Number(b.display_order));
+}
+
 function resolvePublicBaseUrl(settings: Record<string, string>, env: Env, request: Request): string {
   const configured = sanitizeUrl(settings.site_public_url || env.SITE_PUBLIC_URL, 300).replace(/\/+$/, "");
   if (configured) return configured;
@@ -800,7 +814,7 @@ async function getBootstrap(env: Env): Promise<Row> {
     customBlocks,
     resources,
     equipment,
-    pricing: sharedPricing.length ? sharedPricing : fallbackPricing,
+    pricing: mergePricing(sharedPricing, fallbackPricing),
     pricingSource: sharedPricing.length ? "gestion" : "local",
   };
 }

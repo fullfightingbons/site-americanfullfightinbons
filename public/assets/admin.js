@@ -836,7 +836,16 @@ function renderMessagesPanel() {
   `;
 }
 
-// ─── Tarifs (readonly) ────────────────────────────────────────
+const PRICING_FIELDS = [
+  { key: "title", label: "Titre" },
+  { key: "price_label", label: "Prix affiché" },
+  { key: "badge", label: "Badge" },
+  { key: "enabled", label: "Visible sur le site", type: "checkbox" },
+  { key: "display_order", label: "Ordre", type: "number" },
+  { key: "description", label: "Texte associé", type: "textarea" },
+];
+
+// ─── Tarifs ───────────────────────────────────────────────────
 
 function renderPricingPanel() {
   const el = document.getElementById("panel-pricing");
@@ -846,13 +855,20 @@ function renderPricingPanel() {
   el.innerHTML = `
     <div class="vb-entity-panel">
       <div class="vb-note">
-        Les montants viennent du parcours d'inscription externe. Pour les modifier, mettez à jour la configuration publique de l'inscription.
+        ${state?.pricingSource === "gestion"
+          ? "Les montants viennent du parcours d'inscription externe. Vous pouvez masquer un tarif et adapter son titre, son badge ou son texte ici."
+          : "Modifiez ici les tarifs affichés sur le site."}
       </div>
       ${pricing.map((p) => `
-        <div class="vb-entity-card">
+        <div class="vb-entity-card" data-card-kind="pricing" data-card-id="${escapeHtml(p.id)}">
           <div class="vb-entity-card-head">
             <div class="vb-entity-card-title">${escapeHtml(p.title)}</div>
-            <span class="vb-badge-chip">${escapeHtml(p.badge || "")}</span>
+            <div class="vb-entity-card-actions">
+              <span class="vb-entity-chip">${Number(p.enabled ?? 1) === 1 ? "Visible" : "Masqué"}</span>
+              ${p.badge ? `<span class="vb-badge-chip">${escapeHtml(p.badge || "")}</span>` : ""}
+              <button class="vb-card-btn vb-card-btn--edit" type="button"
+                data-edit-kind="pricing" data-edit-id="${escapeHtml(p.id)}">✎ Modifier</button>
+            </div>
           </div>
           <div class="vb-entity-card-preview">
             <strong class="vb-price-label">${escapeHtml(p.price_label)}</strong>
@@ -1102,6 +1118,7 @@ function buildNewItem(kind) {
     blocks: (state?.customBlocks || []).length,
     resources: (state?.resources || []).length,
     equipment: (state?.equipment || []).length,
+    pricing: (state?.pricing || []).length,
   };
   const order = (counts[kind] || 0) + 1;
 
@@ -1116,6 +1133,7 @@ function buildNewItem(kind) {
     blocks: { id, title: "Nouveau bloc", body: "", image_url: "", cta_label: "Ouvrir", cta_href: "", width_percent: 100, height_px: 360, enabled: 1, display_order: order },
     resources: { id, title: "Nouvelle ressource", cta_label: "Ouvrir", cta_href: "https://", description: "", image_url: "", display_order: order },
     equipment: { id, title: "Nouvel équipement", cta_label: "Voir", cta_href: "https://", description: "", image_url: "", display_order: order },
+    pricing: { id, title: "Nouveau tarif", price_label: "", description: "", badge: "", enabled: 1, display_order: order },
   };
   return defaults[kind] || null;
 }
@@ -1334,6 +1352,7 @@ document.addEventListener("click", async (event) => {
       equipment: EQUIPMENT_FIELDS,
       buttons: BUTTON_FIELDS,
       blocks: BLOCK_FIELDS,
+      pricing: PRICING_FIELDS,
     };
     const fields = fieldMap[kind] || [];
     openEditModal({ kind, id, fields, values: item });

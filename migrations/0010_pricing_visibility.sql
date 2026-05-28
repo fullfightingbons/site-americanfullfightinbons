@@ -1,0 +1,1 @@
+ALTER TABLE pricing_plans ADD COLUMN enabled INTEGER NOT NULL DEFAULT 1;
