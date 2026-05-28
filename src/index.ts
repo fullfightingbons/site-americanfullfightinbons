@@ -1069,16 +1069,36 @@ async function handleAdminSave(request: Request, env: Env): Promise<Response> {
     const config = EDITABLE_TABLES[table];
     const columns = Object.keys(values);
     if (!columns.length) return error("Aucune valeur à enregistrer.");
+    const primaryValue = values[config.primaryKey];
+
+    if (primaryValue !== undefined && primaryValue !== null && primaryValue !== "") {
+      const existing = await env.DB.prepare(
+        `SELECT ${quoteIdentifier(config.primaryKey)} FROM ${quoteIdentifier(table)}
+         WHERE ${quoteIdentifier(config.primaryKey)} = ? LIMIT 1`
+      )
+        .bind(primaryValue)
+        .first<Row>();
+
+      if (existing) {
+        const updateColumns = columns.filter((column) => column !== config.primaryKey);
+        if (updateColumns.length) {
+          const assignments = updateColumns.map((column) => `${quoteIdentifier(column)} = ?`).join(", ");
+          await env.DB.prepare(
+            `UPDATE ${quoteIdentifier(table)} SET ${assignments}
+             WHERE ${quoteIdentifier(config.primaryKey)} = ?`
+          )
+            .bind(...updateColumns.map((column) => values[column]), primaryValue)
+            .run();
+        }
+        return ok({ saved: true });
+      }
+    }
+
     const bindings = columns.map((column) => values[column]);
     const quotedColumns = columns.map((column) => quoteIdentifier(column)).join(", ");
     const placeholders = columns.map(() => "?").join(", ");
-    const updates = columns
-      .filter((column) => column !== config.primaryKey)
-      .map((column) => `${quoteIdentifier(column)} = excluded.${quoteIdentifier(column)}`)
-      .join(", ");
     await env.DB.prepare(
-      `INSERT INTO ${quoteIdentifier(table)} (${quotedColumns}) VALUES (${placeholders})
-       ON CONFLICT(${quoteIdentifier(config.primaryKey)}) DO UPDATE SET ${updates}`
+      `INSERT INTO ${quoteIdentifier(table)} (${quotedColumns}) VALUES (${placeholders})`
     )
       .bind(...bindings)
       .run();
