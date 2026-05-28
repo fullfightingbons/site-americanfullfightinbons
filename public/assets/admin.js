@@ -19,7 +19,13 @@ const SETTINGS_GROUPS = [
       ["club_name", "Nom du club"],
       ["brand_primary", "Marque ligne 1"],
       ["brand_secondary", "Marque ligne 2"],
+      ["site_logo_url", "Logo principal (URL)"],
+      ["favicon_url", "Favicon (URL)"],
+      ["site_public_url", "URL publique du site"],
+      ["browser_title", "Titre onglet navigateur"],
       ["footer_note", "Texte footer"],
+      ["footer_legal", "Mention légale footer"],
+      ["footer_meta", "Texte complémentaire footer"],
       ["inpi_note", "Note INPI"],
       ["site_ambient_image", "Image d'ambiance (URL)"],
     ],
@@ -31,16 +37,39 @@ const SETTINGS_GROUPS = [
     description: "Libellés et liens visibles dans l'en-tête du site.",
     fields: [
       ["nav_club_label", "Menu club"],
+      ["nav_club_enabled", "Afficher menu club"],
       ["nav_schedule_label", "Menu séances"],
+      ["nav_schedule_enabled", "Afficher menu séances"],
       ["nav_pricing_label", "Menu tarifs"],
+      ["nav_pricing_enabled", "Afficher menu tarifs"],
       ["nav_contact_label", "Menu contact"],
+      ["nav_contact_enabled", "Afficher menu contact"],
       ["nav_inscription_label", "Menu inscription"],
       ["nav_inscription_href", "Lien inscription"],
+      ["nav_inscription_enabled", "Afficher menu inscription"],
       ["nav_calendar_label", "Menu calendrier"],
       ["nav_calendar_href", "Lien calendrier"],
+      ["nav_calendar_enabled", "Afficher menu calendrier"],
       ["nav_shop_label", "Menu boutique"],
       ["nav_shop_href", "Lien boutique"],
+      ["nav_shop_enabled", "Afficher menu boutique"],
       ["quick_links_cta_label", "Bouton cartes rapides"],
+    ],
+  },
+  {
+    id: "theme",
+    title: "Thème",
+    icon: "◐",
+    description: "Couleurs, polices et rendu global du site public.",
+    fields: [
+      ["theme_primary_color", "Couleur principale"],
+      ["theme_secondary_color", "Couleur secondaire"],
+      ["theme_heading_font", "Police titres"],
+      ["theme_body_font", "Police textes"],
+      ["theme_nav_font", "Police navigation"],
+      ["theme_button_font", "Police boutons"],
+      ["theme_card_title_font", "Police titres cartes"],
+      ["theme_card_body_font", "Police textes cartes"],
     ],
   },
   {
@@ -55,17 +84,37 @@ const SETTINGS_GROUPS = [
       ["hero_background_image", "Image de fond (URL)"],
       ["hero_primary_label", "Bouton principal"],
       ["hero_primary_href", "Lien bouton principal"],
+      ["hero_primary_enabled", "Afficher bouton principal"],
       ["hero_secondary_label", "Bouton secondaire"],
       ["hero_secondary_href", "Lien bouton secondaire"],
+      ["hero_secondary_enabled", "Afficher bouton secondaire"],
       ["hero_link_inscription_label", "Lien rapide 1"],
       ["hero_link_inscription_href", "URL lien rapide 1"],
+      ["hero_link_inscription_enabled", "Afficher lien rapide 1"],
       ["hero_link_calendar_label", "Lien rapide 2"],
       ["hero_link_calendar_href", "URL lien rapide 2"],
+      ["hero_link_calendar_enabled", "Afficher lien rapide 2"],
       ["hero_link_shop_label", "Lien rapide 3"],
       ["hero_link_shop_href", "URL lien rapide 3"],
+      ["hero_link_shop_enabled", "Afficher lien rapide 3"],
       ["announcement_badge", "Badge annonce"],
       ["announcement_title", "Titre annonce"],
       ["announcement_body", "Texte annonce"],
+    ],
+  },
+  {
+    id: "seo-social",
+    title: "SEO & Réseaux",
+    icon: "∞",
+    description: "Métadonnées, indexation et liens sociaux du site.",
+    fields: [
+      ["meta_description", "Description SEO"],
+      ["meta_keywords", "Mots-clés SEO"],
+      ["social_facebook_url", "Facebook"],
+      ["social_instagram_url", "Instagram"],
+      ["social_youtube_url", "YouTube"],
+      ["social_tiktok_url", "TikTok"],
+      ["social_whatsapp_url", "WhatsApp"],
     ],
   },
   {
@@ -94,8 +143,10 @@ const SETTINGS_GROUPS = [
       ["spotlight_background_image", "Image de fond (URL)"],
       ["spotlight_cta_label", "Bouton principal"],
       ["spotlight_cta_href", "Lien bouton principal"],
+      ["spotlight_cta_enabled", "Afficher bouton principal"],
       ["spotlight_secondary_label", "Bouton secondaire"],
       ["spotlight_secondary_href", "Lien bouton secondaire"],
+      ["spotlight_secondary_enabled", "Afficher bouton secondaire"],
       ["spotlight_intro", "Intro section"],
     ],
   },
@@ -137,6 +188,8 @@ const SETTINGS_GROUPS = [
       ["contact_phone_label", "Champ téléphone"],
       ["contact_message_label", "Champ message"],
       ["contact_submit_label", "Bouton envoi"],
+      ["contact_map_unavailable_label", "Texte carte indisponible"],
+      ["contact_map_title", "Titre accessibilité carte"],
     ],
   },
   {
@@ -149,6 +202,15 @@ const SETTINGS_GROUPS = [
       ["sponsor_body", "Texte"],
       ["sponsor_cta_label", "Bouton"],
       ["sponsor_cta_href", "Lien bouton"],
+      ["sponsor_checkout_enabled", "Checkout HelloAsso activé"],
+      ["sponsor_checkout_org_slug", "Slug organisation HelloAsso"],
+      ["sponsor_checkout_item_name", "Libellé du paiement"],
+      ["sponsor_checkout_min_amount_eur", "Don minimum (€)"],
+      ["sponsor_checkout_suggested_amounts", "Montants suggérés (€)"],
+      ["sponsor_amount_label", "Champ montant"],
+      ["sponsor_first_name_label", "Champ prénom"],
+      ["sponsor_last_name_label", "Champ nom"],
+      ["sponsor_email_label", "Champ e-mail"],
     ],
   },
 ];
@@ -173,6 +235,7 @@ const SECTION_KEYS = [
   { key: "resources", label: "Ressources", icon: "📂" },
   { key: "equipment", label: "Équipement", icon: "🥊" },
   { key: "sponsor", label: "Mécénat", icon: "♦" },
+  { key: "custom", label: "Blocs libres", icon: "▦" },
   { key: "contact", label: "Contact", icon: "✉" },
 ];
 
@@ -222,6 +285,51 @@ function showStatus(message, isError = true) {
 
 function showLegacyStatus(target, message, isError = true) {
   showStatus(message, isError);
+}
+
+function getSettingFieldValue(input) {
+  if (!input) return "";
+  if (input.type === "checkbox") return input.checked ? "1" : "0";
+  return input.value;
+}
+
+function refreshSitePreview() {
+  const frame = document.getElementById("site-preview-frame");
+  const stamp = document.getElementById("site-preview-stamp");
+  if (!frame) return;
+  const url = new URL(window.location.origin);
+  url.searchParams.set("preview", String(Date.now()));
+  frame.src = url.toString();
+  if (stamp) stamp.textContent = new Date().toLocaleTimeString("fr-FR");
+}
+
+function renderPreviewMeta() {
+  const el = document.getElementById("site-preview-meta");
+  if (!el || !state) return;
+  const socialCount = Object.values(state.social || {}).filter(Boolean).length;
+  const themeSummary = [state.design?.primaryColor, state.design?.secondaryColor].filter(Boolean).join(" · ");
+  el.innerHTML = `
+    <div class="vb-preview-stat">
+      <span>Sections actives</span>
+      <strong>${(state.sections || []).filter((item) => Number(item.enabled) === 1).length}</strong>
+    </div>
+    <div class="vb-preview-stat">
+      <span>Visuels</span>
+      <strong>${(state.gallery || []).length}</strong>
+    </div>
+    <div class="vb-preview-stat">
+      <span>Réseaux</span>
+      <strong>${socialCount}</strong>
+    </div>
+    <div class="vb-preview-stat vb-preview-stat--wide">
+      <span>Thème</span>
+      <strong>${escapeHtml(themeSummary || "Couleurs par défaut")}</strong>
+    </div>
+  `;
+}
+
+function isTruthy(value) {
+  return ["1", "true", "yes", "on"].includes(String(value ?? "").toLowerCase());
 }
 
 // ─── Navigation sidebar ───────────────────────────────────────
@@ -483,13 +591,20 @@ function renderSettingsPanel(groupId) {
 
       <div class="vb-fields-grid">
         ${group.fields.map(([key, label]) => {
+          const isBoolean = key.endsWith("_enabled");
           const isLong = key.includes("body") || key.includes("story") || key.includes("intro")
             || key.includes("address") || key.includes("note") || key.includes("subtitle");
           const value = settings[key] || "";
+          const checked = ["1", "true", "yes", "on"].includes(String(value).toLowerCase());
           return `
             <div class="vb-field ${isLong ? "vb-field--full" : ""}">
               <label class="vb-field-label" for="setting-${escapeHtml(key)}">${escapeHtml(label)}</label>
-              ${isLong
+              ${isBoolean
+                ? `<label class="vb-toggle-row" for="setting-${escapeHtml(key)}">
+                    <span>${escapeHtml(label)}</span>
+                    <input id="setting-${escapeHtml(key)}" name="${escapeHtml(key)}" class="vb-field-checkbox" type="checkbox" ${checked ? "checked" : ""}>
+                  </label>`
+                : isLong
                 ? `<textarea id="setting-${escapeHtml(key)}" name="${escapeHtml(key)}" class="vb-field-textarea" rows="3">${escapeHtml(value)}</textarea>`
                 : `<input id="setting-${escapeHtml(key)}" name="${escapeHtml(key)}" class="vb-field-input" type="text" value="${inputValue(value)}">`
               }
@@ -529,8 +644,47 @@ function renderEntityPanel(panelId, kind, items, fields, addLabel) {
   `;
 }
 
+function renderSectionsTextPanel() {
+  const el = document.getElementById("panel-sections");
+  if (!el) return;
+  const items = [...(state?.sections || [])].sort((a, b) => Number(a.display_order) - Number(b.display_order));
+  el.innerHTML = `
+    <div class="vb-entity-panel">
+      <div class="vb-entity-header">
+        <div class="vb-note">Modifiez ici les titres et sous-titres visibles en haut de chaque section. Les textes internes restent dans les panneaux dédiés : Club, À la une, Planning, Équipe, Tarifs, etc.</div>
+        ${items.length > 1 ? `<button class="btn btn-dark premium-btn-secondary" type="button" data-open-order="sections">Réordonner</button>` : ""}
+      </div>
+      <div class="vb-entity-list">
+        ${items.map((item) => renderSectionTextCard(item)).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function renderSectionTextCard(item) {
+  const meta = SECTION_KEYS.find((k) => k.key === item.section_key) || { icon: "¶", label: item.section_key };
+  const enabled = Number(item.enabled) === 1;
+  return `
+    <div class="vb-entity-card" data-card-kind="sections" data-card-id="${escapeHtml(item.id)}">
+      <div class="vb-entity-card-head">
+        <div class="vb-entity-card-title">${meta.icon} ${escapeHtml(item.title || meta.label)}</div>
+        <div class="vb-entity-card-actions">
+          <span class="vb-entity-chip">${enabled ? "Visible" : "Masquée"}</span>
+          <button class="vb-card-btn vb-card-btn--edit" type="button"
+            data-edit-kind="sections" data-edit-id="${escapeHtml(item.id)}">✎ Modifier</button>
+        </div>
+      </div>
+      <div class="vb-entity-card-preview">
+        <span class="vb-entity-chip">${escapeHtml(item.section_key)}</span>
+        ${item.subtitle ? `<span class="vb-entity-chip">${escapeHtml(String(item.subtitle).slice(0, 80))}</span>` : ""}
+      </div>
+    </div>
+  `;
+}
+
 function renderEntityCard(kind, item, fields) {
-  const titleField = item.title || item.full_name || item.day_label || "Élément";
+  const titleField = item.title || item.label || item.full_name || item.day_label || "Élément";
+  const imageField = fields.find((field) => field.type === "image" && item[field.key]);
   return `
     <div class="vb-entity-card" data-card-kind="${escapeHtml(kind)}" data-card-id="${escapeHtml(item.id)}">
       <div class="vb-entity-card-head">
@@ -543,7 +697,8 @@ function renderEntityCard(kind, item, fields) {
         </div>
       </div>
       <div class="vb-entity-card-preview">
-        ${fields.slice(0, 3).map((f) => item[f.key]
+        ${imageField ? `<img class="vb-entity-thumb" src="${escapeHtml(item[imageField.key])}" alt="">` : ""}
+        ${fields.filter((field) => field.type !== "image").slice(0, 4).map((f) => item[f.key]
           ? `<span class="vb-entity-chip">${escapeHtml(String(item[f.key]).slice(0, 40))}</span>`
           : ""
         ).join("")}
@@ -565,6 +720,7 @@ const TEAM_FIELDS = [
   { key: "full_name", label: "Nom" },
   { key: "role_label", label: "Rôle" },
   { key: "belt_label", label: "Ceinture" },
+  { key: "image_url", label: "Photo", type: "image" },
   { key: "display_order", label: "Ordre", type: "number" },
   { key: "bio", label: "Bio", type: "textarea" },
 ];
@@ -580,7 +736,7 @@ const HIGHLIGHTS_FIELDS = [
 
 const GALLERY_FIELDS = [
   { key: "title", label: "Titre" },
-  { key: "image_url", label: "URL image" },
+  { key: "image_url", label: "Image", type: "image" },
   { key: "alt_text", label: "Texte alternatif", type: "textarea" },
   { key: "display_order", label: "Ordre", type: "number" },
 ];
@@ -593,13 +749,34 @@ const LINKS_FIELDS = [
   { key: "description", label: "Description", type: "textarea" },
 ];
 
+const BUTTON_FIELDS = [
+  { key: "label", label: "Texte du bouton" },
+  { key: "href", label: "Lien" },
+  { key: "placement", label: "Emplacement", type: "select", options: ["nav", "hero", "quick"] },
+  { key: "style", label: "Style", type: "select", options: ["red", "dark", "link"] },
+  { key: "enabled", label: "Publié", type: "checkbox" },
+  { key: "display_order", label: "Ordre", type: "number" },
+];
+
+const BLOCK_FIELDS = [
+  { key: "title", label: "Titre" },
+  { key: "image_url", label: "Illustration", type: "image" },
+  { key: "cta_label", label: "Texte bouton" },
+  { key: "cta_href", label: "Lien bouton" },
+  { key: "width_percent", label: "Largeur (%)", type: "number" },
+  { key: "height_px", label: "Hauteur image (px)", type: "number" },
+  { key: "enabled", label: "Publié", type: "checkbox" },
+  { key: "display_order", label: "Ordre", type: "number" },
+  { key: "body", label: "Texte", type: "textarea" },
+];
+
 const RESOURCES_FIELDS = [
   { key: "title", label: "Titre" },
   { key: "cta_label", label: "Texte bouton" },
   { key: "cta_href", label: "Lien bouton" },
   { key: "display_order", label: "Ordre", type: "number" },
   { key: "description", label: "Description", type: "textarea" },
-  { key: "image_url", label: "URL image" },
+  { key: "image_url", label: "Image", type: "image" },
 ];
 
 const EQUIPMENT_FIELDS = [
@@ -608,7 +785,14 @@ const EQUIPMENT_FIELDS = [
   { key: "cta_href", label: "Lien bouton" },
   { key: "display_order", label: "Ordre", type: "number" },
   { key: "description", label: "Description", type: "textarea" },
-  { key: "image_url", label: "URL image" },
+  { key: "image_url", label: "Photo", type: "image" },
+];
+
+const SECTION_TEXT_FIELDS = [
+  { key: "title", label: "Titre affiché" },
+  { key: "subtitle", label: "Sous-titre affiché", type: "textarea" },
+  { key: "enabled", label: "Section visible", type: "checkbox" },
+  { key: "display_order", label: "Ordre", type: "number" },
 ];
 
 // ─── Messages ─────────────────────────────────────────────────
@@ -728,17 +912,21 @@ function renderAll() {
   SETTINGS_GROUPS.forEach((g) => renderSettingsPanel(g.id));
 
   // Entités
+  renderSectionsTextPanel();
   renderEntityPanel("schedule", "schedule", state.schedule || [], SCHEDULE_FIELDS, "Ajouter un créneau");
   renderEntityPanel("team", "team", state.team || [], TEAM_FIELDS, "Ajouter un membre");
   renderEntityPanel("highlights", "highlights", state.highlights || [], HIGHLIGHTS_FIELDS, "Ajouter un temps fort");
   renderEntityPanel("gallery", "gallery", state.gallery || [], GALLERY_FIELDS, "Ajouter une image");
   renderEntityPanel("links", "links", state.links || [], LINKS_FIELDS, "Ajouter un lien");
+  renderEntityPanel("buttons", "buttons", state.customButtons || [], BUTTON_FIELDS, "Ajouter un bouton");
+  renderEntityPanel("blocks", "blocks", state.customBlocks || [], BLOCK_FIELDS, "Ajouter un bloc");
   renderEntityPanel("resources", "resources", state.resources || [], RESOURCES_FIELDS, "Ajouter une ressource");
   renderEntityPanel("equipment", "equipment", state.equipment || [], EQUIPMENT_FIELDS, "Ajouter un équipement");
 
   renderMessagesPanel();
   renderPricingPanel();
   renderPasswordPanel();
+  renderPreviewMeta();
 
   // Garder le panel actif
   setActivePanel(activePanel);
@@ -754,17 +942,38 @@ async function loadAdmin() {
     club_name: state.site?.name,
     brand_primary: state.site?.brandPrimary,
     brand_secondary: state.site?.brandSecondary,
+    site_logo_url: state.design?.logoUrl,
+    favicon_url: state.design?.faviconUrl,
+    site_public_url: state.sitePublicUrl,
+    browser_title: state.site?.browserTitle,
+    meta_description: state.meta?.description,
+    meta_keywords: state.meta?.keywords,
     site_ambient_image: state.design?.siteAmbientImage,
+    theme_primary_color: state.design?.primaryColor,
+    theme_secondary_color: state.design?.secondaryColor,
+    theme_heading_font: state.design?.headingFont,
+    theme_body_font: state.design?.bodyFont,
+    theme_nav_font: state.design?.navFont,
+    theme_button_font: state.design?.buttonFont,
+    theme_card_title_font: state.design?.cardTitleFont,
+    theme_card_body_font: state.design?.cardBodyFont,
     nav_club_label: state.navigation?.clubLabel,
+    nav_club_enabled: state.navigation?.clubEnabled ? "1" : "0",
     nav_schedule_label: state.navigation?.scheduleLabel,
+    nav_schedule_enabled: state.navigation?.scheduleEnabled ? "1" : "0",
     nav_pricing_label: state.navigation?.pricingLabel,
+    nav_pricing_enabled: state.navigation?.pricingEnabled ? "1" : "0",
     nav_contact_label: state.navigation?.contactLabel,
+    nav_contact_enabled: state.navigation?.contactEnabled ? "1" : "0",
     nav_inscription_label: state.navigation?.inscriptionLabel,
     nav_inscription_href: state.navigation?.inscriptionHref,
+    nav_inscription_enabled: state.navigation?.inscriptionEnabled ? "1" : "0",
     nav_calendar_label: state.navigation?.calendarLabel,
     nav_calendar_href: state.navigation?.calendarHref,
+    nav_calendar_enabled: state.navigation?.calendarEnabled ? "1" : "0",
     nav_shop_label: state.navigation?.shopLabel,
     nav_shop_href: state.navigation?.shopHref,
+    nav_shop_enabled: state.navigation?.shopEnabled ? "1" : "0",
     quick_links_cta_label: state.labels?.quickLinkCta,
     contact_email: state.site?.email,
     contact_phone: state.site?.phone,
@@ -781,17 +990,22 @@ async function loadAdmin() {
     hero_background_image: state.design?.heroBackgroundImage,
     hero_link_inscription_label: state.hero?.utilityLinks?.[0]?.label,
     hero_link_inscription_href: state.hero?.utilityLinks?.[0]?.href,
+    hero_link_inscription_enabled: state.hero?.utilityLinks?.[0]?.enabled ? "1" : "0",
     hero_link_calendar_label: state.hero?.utilityLinks?.[1]?.label,
     hero_link_calendar_href: state.hero?.utilityLinks?.[1]?.href,
+    hero_link_calendar_enabled: state.hero?.utilityLinks?.[1]?.enabled ? "1" : "0",
     hero_link_shop_label: state.hero?.utilityLinks?.[2]?.label,
     hero_link_shop_href: state.hero?.utilityLinks?.[2]?.href,
+    hero_link_shop_enabled: state.hero?.utilityLinks?.[2]?.enabled ? "1" : "0",
     announcement_badge: state.announcement?.badge,
     announcement_title: state.announcement?.title,
     announcement_body: state.announcement?.body,
     hero_primary_label: state.hero?.primaryLabel,
     hero_primary_href: state.hero?.primaryHref,
+    hero_primary_enabled: state.hero?.primaryEnabled ? "1" : "0",
     hero_secondary_label: state.hero?.secondaryLabel,
     hero_secondary_href: state.hero?.secondaryHref,
+    hero_secondary_enabled: state.hero?.secondaryEnabled ? "1" : "0",
     spotlight_intro: state.spotlight?.intro,
     spotlight_date: state.spotlight?.date,
     spotlight_title: state.spotlight?.title,
@@ -799,8 +1013,10 @@ async function loadAdmin() {
     spotlight_background_image: state.design?.spotlightBackgroundImage,
     spotlight_cta_label: state.spotlight?.primaryLabel,
     spotlight_cta_href: state.spotlight?.primaryHref,
+    spotlight_cta_enabled: state.spotlight?.primaryEnabled ? "1" : "0",
     spotlight_secondary_label: state.spotlight?.secondaryLabel,
     spotlight_secondary_href: state.spotlight?.secondaryHref,
+    spotlight_secondary_enabled: state.spotlight?.secondaryEnabled ? "1" : "0",
     schedule_intro: state.scheduleIntro,
     team_intro: state.teamIntro,
     pricing_intro_synced: state.pricingIntroSynced,
@@ -814,6 +1030,15 @@ async function loadAdmin() {
     sponsor_body: state.sponsor?.body,
     sponsor_cta_label: state.sponsor?.ctaLabel,
     sponsor_cta_href: state.sponsor?.ctaHref,
+    sponsor_checkout_enabled: state.sponsor?.checkoutEnabled ? "1" : "0",
+    sponsor_checkout_org_slug: state.sponsor?.checkoutOrganizationSlug,
+    sponsor_checkout_item_name: state.sponsor?.checkoutItemName,
+    sponsor_checkout_min_amount_eur: state.sponsor?.checkoutMinAmountEur,
+    sponsor_checkout_suggested_amounts: (state.sponsor?.checkoutSuggestedAmounts || []).join(","),
+    sponsor_amount_label: state.labels?.sponsorAmount,
+    sponsor_first_name_label: state.labels?.sponsorFirstName,
+    sponsor_last_name_label: state.labels?.sponsorLastName,
+    sponsor_email_label: state.labels?.sponsorEmail,
     contact_intro: state.contactIntro,
     contact_map_embed_url: state.contactForm?.mapEmbedUrl,
     contact_details_title: state.contactForm?.detailsTitle,
@@ -826,11 +1051,21 @@ async function loadAdmin() {
     contact_phone_label: state.contactForm?.phoneLabel,
     contact_message_label: state.contactForm?.messageLabel,
     contact_submit_label: state.contactForm?.submitLabel,
+    contact_map_unavailable_label: state.labels?.mapUnavailable,
+    contact_map_title: state.labels?.contactMapTitle,
     inpi_note: state.inpiNote,
     footer_note: state.site?.footerNote,
+    footer_legal: state.footer?.legal,
+    footer_meta: state.footer?.meta,
+    social_facebook_url: state.social?.facebookUrl,
+    social_instagram_url: state.social?.instagramUrl,
+    social_youtube_url: state.social?.youtubeUrl,
+    social_tiktok_url: state.social?.tiktokUrl,
+    social_whatsapp_url: state.social?.whatsappUrl,
   };
 
   renderAll();
+  refreshSitePreview();
 }
 
 // ─── kindConfig ───────────────────────────────────────────────
@@ -843,6 +1078,8 @@ function kindConfig(kind) {
     highlights: { table: "highlights", items: state?.highlights },
     gallery: { table: "gallery_items", items: state?.gallery },
     links: { table: "partner_links", items: state?.links },
+    buttons: { table: "custom_buttons", items: state?.customButtons },
+    blocks: { table: "custom_blocks", items: state?.customBlocks },
     resources: { table: "resource_cards", items: state?.resources },
     equipment: { table: "equipment_items", items: state?.equipment },
     pricing: { table: "pricing_plans", items: state?.pricing },
@@ -861,6 +1098,8 @@ function buildNewItem(kind) {
     highlights: (state?.highlights || []).length,
     gallery: (state?.gallery || []).length,
     links: (state?.links || []).length,
+    buttons: (state?.customButtons || []).length,
+    blocks: (state?.customBlocks || []).length,
     resources: (state?.resources || []).length,
     equipment: (state?.equipment || []).length,
   };
@@ -869,10 +1108,12 @@ function buildNewItem(kind) {
   const defaults = {
     sections: { id, section_key: "new_section", title: "Nouvelle section", subtitle: "", enabled: 0, display_order: order },
     schedule: { id, day_label: "Jour", time_label: "Horaire", note: "", display_order: order },
-    team: { id, full_name: "Nouveau membre", role_label: "Rôle", belt_label: "", bio: "", display_order: order },
+    team: { id, full_name: "Nouveau membre", role_label: "Rôle", belt_label: "", bio: "", image_url: "", display_order: order },
     highlights: { id, title: "Nouvel encart", body: "", badge: "", cta_label: "", cta_href: "", display_order: order },
     gallery: { id, title: "Nouvelle image", image_url: "", alt_text: "", display_order: order },
     links: { id, title: "Nouveau lien", href: "https://", cta_label: "Accéder", description: "", display_order: order },
+    buttons: { id, label: "Nouveau bouton", href: "https://", placement: "hero", style: "red", enabled: 1, display_order: order },
+    blocks: { id, title: "Nouveau bloc", body: "", image_url: "", cta_label: "Ouvrir", cta_href: "", width_percent: 100, height_px: 360, enabled: 1, display_order: order },
     resources: { id, title: "Nouvelle ressource", cta_label: "Ouvrir", cta_href: "https://", description: "", image_url: "", display_order: order },
     equipment: { id, title: "Nouvel équipement", cta_label: "Voir", cta_href: "https://", description: "", image_url: "", display_order: order },
   };
@@ -981,7 +1222,7 @@ document.addEventListener("click", async (event) => {
         if (input) {
           await api("/api/admin/content", {
             method: "POST",
-            body: JSON.stringify({ table: "site_settings", action: "upsert", values: { key, value: input.value } }),
+            body: JSON.stringify({ table: "site_settings", action: "upsert", values: { key, value: getSettingFieldValue(input) } }),
           });
         }
       }
@@ -1084,12 +1325,15 @@ document.addEventListener("click", async (event) => {
 
     const fieldMap = {
       schedule: SCHEDULE_FIELDS,
+      sections: SECTION_TEXT_FIELDS,
       team: TEAM_FIELDS,
       highlights: HIGHLIGHTS_FIELDS,
       gallery: GALLERY_FIELDS,
       links: LINKS_FIELDS,
       resources: RESOURCES_FIELDS,
       equipment: EQUIPMENT_FIELDS,
+      buttons: BUTTON_FIELDS,
+      blocks: BLOCK_FIELDS,
     };
     const fields = fieldMap[kind] || [];
     openEditModal({ kind, id, fields, values: item });
@@ -1185,6 +1429,9 @@ document.addEventListener("click", async (event) => {
     if (!kind || !id) return;
     const data = {};
     new FormData(form).forEach((value, key) => { data[key] = value; });
+    form.querySelectorAll('input[type="checkbox"]').forEach((input) => {
+      data[input.name] = input.checked ? "1" : "0";
+    });
     try {
       await api("/api/admin/content", {
         method: "POST",
@@ -1218,6 +1465,12 @@ document.addEventListener("click", async (event) => {
   if (button.id === "refresh-button") {
     await loadAdmin();
     showStatus("Données rechargées.", false);
+    return;
+  }
+
+  if (button.id === "preview-refresh-button") {
+    refreshSitePreview();
+    showStatus("Prévisualisation rechargée.", false);
     return;
   }
 
@@ -1274,6 +1527,34 @@ function closeAllModals() {
   ["modal-editor", "modal-delete", "modal-upload", "modal-order"].forEach(closeModal);
 }
 
+function readFileAsImage(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = () => reject(new Error("Image illisible."));
+      image.src = reader.result;
+    };
+    reader.onerror = () => reject(new Error("Lecture du fichier impossible."));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function compressImageFile(file, maxSize = 1200, quality = 0.82) {
+  if (!file.type.startsWith("image/")) throw new Error("Le fichier choisi n'est pas une image.");
+  const image = await readFileAsImage(file);
+  const ratio = Math.min(1, maxSize / Math.max(image.width, image.height));
+  const width = Math.max(1, Math.round(image.width * ratio));
+  const height = Math.max(1, Math.round(image.height * ratio));
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext("2d");
+  context.drawImage(image, 0, 0, width, height);
+  return canvas.toDataURL("image/jpeg", quality);
+}
+
 function openEditModal(config) {
   const form = document.getElementById("modal-editor-form");
   if (!form) return;
@@ -1290,13 +1571,69 @@ function openEditModal(config) {
     if (field.type === "textarea") {
       input = document.createElement("textarea");
       input.rows = 4;
+    } else if (field.type === "select") {
+      input = document.createElement("select");
+      (field.options || []).forEach((option) => {
+        const opt = document.createElement("option");
+        opt.value = option;
+        opt.textContent = option;
+        input.appendChild(opt);
+      });
+    } else if (field.type === "checkbox") {
+      input = document.createElement("input");
+      input.type = "checkbox";
+      input.value = "1";
+      input.checked = isTruthy(config.values[field.key]);
+    } else if (field.type === "image") {
+      wrapper.classList.add("premium-field--image");
+      input = document.createElement("input");
+      input.type = "text";
+      input.placeholder = "URL de l'image ou fichier ci-dessous";
     } else {
       input = document.createElement("input");
       input.type = field.type || "text";
     }
     input.name = field.key;
-    input.value = config.values[field.key] ?? "";
+    if (field.type !== "checkbox") input.value = config.values[field.key] ?? "";
     wrapper.appendChild(input);
+
+    if (field.type === "image") {
+      const tools = document.createElement("div");
+      tools.className = "premium-image-tools";
+
+      const preview = document.createElement("img");
+      preview.className = "premium-image-preview";
+      preview.alt = "";
+      preview.hidden = !input.value;
+      if (input.value) preview.src = input.value;
+
+      const fileInput = document.createElement("input");
+      fileInput.type = "file";
+      fileInput.accept = "image/*";
+      fileInput.className = "premium-image-file";
+      fileInput.addEventListener("change", async () => {
+        const file = fileInput.files?.[0];
+        if (!file) return;
+        try {
+          input.value = await compressImageFile(file);
+          preview.src = input.value;
+          preview.hidden = false;
+          showStatus("Image prête à enregistrer.", false);
+        } catch (error) {
+          showStatus(error instanceof Error ? error.message : "Image impossible à préparer.");
+        }
+      });
+
+      input.addEventListener("input", () => {
+        preview.hidden = !input.value;
+        if (input.value) preview.src = input.value;
+      });
+
+      tools.appendChild(preview);
+      tools.appendChild(fileInput);
+      wrapper.appendChild(tools);
+    }
+
     form.appendChild(wrapper);
   });
 

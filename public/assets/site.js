@@ -26,6 +26,25 @@ function setLink(id, label, href) {
   if (href) element.href = href;
 }
 
+function setVisible(id, visible) {
+  const element = document.getElementById(id);
+  if (!element) return;
+  element.hidden = !visible;
+  element.style.display = visible ? "" : "none";
+  element.setAttribute("aria-hidden", visible ? "false" : "true");
+}
+
+function visibleButtons(data, placement) {
+  return (data.customButtons || [])
+    .filter((item) => Number(item.enabled) === 1 && item.placement === placement && item.label && item.href)
+    .sort((a, b) => Number(a.display_order) - Number(b.display_order));
+}
+
+function renderCustomButton(item, fallbackClass = "btn btn-dark") {
+  const className = item.style === "red" ? "btn btn-red" : item.style === "link" ? "utility-link" : fallbackClass;
+  return `<a class="${escapeHtml(className)}" href="${escapeHtml(item.href)}">${escapeHtml(item.label)}</a>`;
+}
+
 function setMetaContent(selector, value) {
   const element = document.querySelector(selector);
   if (element) element.setAttribute("content", value || "");
@@ -35,31 +54,87 @@ function setCssVar(name, value) {
   document.documentElement.style.setProperty(name, value ? `url("${String(value).replace(/"/g, '\\"')}")` : "none");
 }
 
+function setRootVar(name, value) {
+  if (value) document.documentElement.style.setProperty(name, value);
+}
+
 function applyDesign(data) {
   setCssVar("--site-ambient-image", data.design?.siteAmbientImage);
   setCssVar("--hero-background-image", data.design?.heroBackgroundImage);
   setCssVar("--spotlight-background-image", data.design?.spotlightBackgroundImage);
+  setRootVar("--accent", data.design?.primaryColor);
+  setRootVar("--accent-deep", data.design?.primaryColor);
+  setRootVar("--gold", data.design?.secondaryColor);
+  setRootVar("--font-display", data.design?.headingFont);
+  setRootVar("--font-body", data.design?.bodyFont);
+  setRootVar("--font-nav", data.design?.navFont);
+  setRootVar("--font-button", data.design?.buttonFont);
+  setRootVar("--font-card-title", data.design?.cardTitleFont);
+  setRootVar("--font-card-body", data.design?.cardBodyFont);
+}
+
+function applyBrandAssets(data) {
+  const logo = document.getElementById("brand-logo");
+  if (logo && data.design?.logoUrl) logo.src = data.design.logoUrl;
+  const favicon = document.getElementById("site-favicon");
+  if (favicon && data.design?.faviconUrl) favicon.href = data.design.faviconUrl;
 }
 
 function applyStaticContent(data) {
   window.__siteData = data;
+  if (data.site?.browserTitle) document.title = data.site.browserTitle;
   setText("brand-primary", data.site?.brandPrimary);
   setText("brand-secondary", data.site?.brandSecondary);
   setLink("nav-club", data.navigation?.clubLabel, "#club");
+  setVisible("nav-club", data.navigation?.clubEnabled !== false);
   setLink("nav-schedule", data.navigation?.scheduleLabel, "#planning");
+  setVisible("nav-schedule", data.navigation?.scheduleEnabled !== false);
   setLink("nav-pricing", data.navigation?.pricingLabel, "#tarifs");
+  setVisible("nav-pricing", data.navigation?.pricingEnabled !== false);
   setLink("nav-contact", data.navigation?.contactLabel, "#contact");
+  setVisible("nav-contact", data.navigation?.contactEnabled !== false);
   setLink("nav-inscription", data.navigation?.inscriptionLabel, data.navigation?.inscriptionHref);
+  setVisible("nav-inscription", data.navigation?.inscriptionEnabled !== false);
   setLink("nav-calendar", data.navigation?.calendarLabel, data.navigation?.calendarHref);
+  setVisible("nav-calendar", data.navigation?.calendarEnabled !== false);
   setLink("nav-shop", data.navigation?.shopLabel, data.navigation?.shopHref);
+  setVisible("nav-shop", data.navigation?.shopEnabled !== false);
+
+  setLink("hero-primary", data.hero?.primaryLabel, data.hero?.primaryHref);
+  setVisible("hero-primary", data.hero?.primaryEnabled !== false);
+  setLink("hero-secondary", data.hero?.secondaryLabel, data.hero?.secondaryHref);
+  setVisible("hero-secondary", data.hero?.secondaryEnabled !== false);
 
   const utilityLinks = data.hero?.utilityLinks || [];
   utilityLinks.forEach((item, index) => {
     setLink(`hero-utility-${index + 1}`, item.label, item.href);
+    setVisible(`hero-utility-${index + 1}`, item.enabled !== false);
   });
+  const navMenu = document.getElementById("nav-menu");
+  if (navMenu) {
+    navMenu.querySelectorAll("[data-custom-placement='nav']").forEach((item) => item.remove());
+    visibleButtons(data, "nav").forEach((item) => {
+      navMenu.insertAdjacentHTML("beforeend", renderCustomButton({ ...item, style: "link" }).replace("<a ", "<a data-custom-placement=\"nav\" "));
+    });
+  }
+  const heroActions = document.getElementById("hero-actions");
+  if (heroActions) {
+    heroActions.querySelectorAll("[data-custom-placement='hero']").forEach((item) => item.remove());
+    visibleButtons(data, "hero").forEach((item) => {
+      heroActions.insertAdjacentHTML("beforeend", renderCustomButton(item).replace("<a ", "<a data-custom-placement=\"hero\" "));
+    });
+  }
   setText("contact-email-title", data.labels?.contactEmailTitle);
   setText("contact-phone-title", data.labels?.contactPhoneTitle);
   setText("contact-address-title", data.labels?.contactAddressTitle);
+}
+
+function applyMeta(data) {
+  setMetaContent('meta[name="description"]', data.meta?.description);
+  setMetaContent('meta[name="keywords"]', data.meta?.keywords);
+  setMetaContent('meta[property="og:title"]', data.site?.name);
+  setMetaContent('meta[property="og:description"]', data.meta?.description);
+  setMetaContent('meta[property="og:image"]', data.design?.logoUrl);
 }
 
 function renderTopLinks(links) {
@@ -77,7 +152,43 @@ function renderTopLinks(links) {
       </article>
     `
     )
+    .concat(
+      visibleButtons(window.__siteData || {}, "quick").map(
+        (item) => `
+      <article class="quick-link-card">
+        <strong>${escapeHtml(item.label)}</strong>
+        <p>${escapeHtml(item.href)}</p>
+        <a href="${escapeHtml(item.href)}">${escapeHtml(item.label)}</a>
+      </article>
+    `
+      )
+    )
     .join("");
+}
+
+function renderSocialLinks(data) {
+  const host = document.getElementById("social-links");
+  if (!host) return;
+  const items = [
+    { label: "Facebook", href: data.social?.facebookUrl },
+    { label: "Instagram", href: data.social?.instagramUrl },
+    { label: "YouTube", href: data.social?.youtubeUrl },
+    { label: "TikTok", href: data.social?.tiktokUrl },
+    { label: "WhatsApp", href: data.social?.whatsappUrl },
+  ].filter((item) => item.href);
+
+  host.innerHTML = items
+    .map((item) => `<a class="footer-social-link" href="${escapeHtml(item.href)}" target="_blank" rel="noreferrer">${escapeHtml(item.label)}</a>`)
+    .join("");
+
+  host.hidden = items.length === 0;
+}
+
+function renderFooter(data) {
+  setText("footer-note", data.site?.footerNote);
+  setText("footer-legal", data.footer?.legal);
+  setText("footer-meta", data.footer?.meta);
+  renderSocialLinks(data);
 }
 
 function renderStorySection(data, section) {
@@ -121,8 +232,8 @@ function renderSpotlightSection(data, section) {
           <h3>${escapeHtml(data.spotlight.title)}</h3>
           <p>${escapeHtml(data.spotlight.body)}</p>
           <div class="spotlight-actions">
-            <a class="btn btn-red" href="${escapeHtml(data.spotlight.primaryHref)}">${escapeHtml(data.spotlight.primaryLabel)}</a>
-            <a class="btn btn-dark" href="${escapeHtml(data.spotlight.secondaryHref)}">${escapeHtml(data.spotlight.secondaryLabel)}</a>
+            ${data.spotlight.primaryEnabled !== false && data.spotlight.primaryHref ? `<a class="btn btn-red" href="${escapeHtml(data.spotlight.primaryHref)}">${escapeHtml(data.spotlight.primaryLabel || "Ouvrir")}</a>` : ""}
+            ${data.spotlight.secondaryEnabled !== false && data.spotlight.secondaryHref ? `<a class="btn btn-dark" href="${escapeHtml(data.spotlight.secondaryHref)}">${escapeHtml(data.spotlight.secondaryLabel || "Ouvrir")}</a>` : ""}
           </div>
         </div>
       </article>
@@ -172,6 +283,7 @@ function renderTeamSection(data, section) {
           .map(
             (item) => `
           <article class="team-card">
+            ${item.image_url ? `<img class="team-photo" src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.full_name)}" loading="lazy">` : ""}
             <div class="meta">${escapeHtml(item.role_label)}</div>
             <h3>${escapeHtml(item.full_name)}</h3>
             <div class="belt">${escapeHtml(item.belt_label)}</div>
@@ -306,7 +418,7 @@ function renderResourcesSection(data, section) {
             ${item.image_url ? `<img src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.title)}" loading="lazy">` : ""}
             <h3>${escapeHtml(item.title)}</h3>
             <p>${escapeHtml(item.description)}</p>
-            <a class="cta" href="${escapeHtml(item.cta_href)}">${escapeHtml(item.cta_label)}</a>
+            ${item.cta_href ? `<a class="cta" href="${escapeHtml(item.cta_href)}">${escapeHtml(item.cta_label || "Ouvrir")}</a>` : ""}
           </article>
         `
           )
@@ -334,7 +446,7 @@ function renderEquipmentSection(data, section) {
             ${item.image_url ? `<img src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.title)}" loading="lazy">` : ""}
             <h3>${escapeHtml(item.title)}</h3>
             <p>${escapeHtml(item.description)}</p>
-            <a class="cta" href="${escapeHtml(item.cta_href)}">${escapeHtml(item.cta_label)}</a>
+            ${item.cta_href ? `<a class="cta" href="${escapeHtml(item.cta_href)}">${escapeHtml(item.cta_label || "Ouvrir")}</a>` : ""}
           </article>
         `
           )
@@ -345,8 +457,10 @@ function renderEquipmentSection(data, section) {
 }
 
 function renderSponsorSection(data, section) {
+  const suggestedAmounts = data.sponsor?.checkoutSuggestedAmounts || [];
+  const minAmount = Number.parseInt(data.sponsor?.checkoutMinAmountEur || "5", 10) || 5;
   return `
-    <section class="section-shell">
+    <section id="don" class="section-shell">
       <div class="section-head">
         <div>
           <div class="section-tag">${escapeHtml(section.title || "Mécénat")}</div>
@@ -357,10 +471,59 @@ function renderSponsorSection(data, section) {
       <article class="sponsor-card">
         <h3>${escapeHtml(data.sponsor.title)}</h3>
         <p>${escapeHtml(data.sponsor.body)}</p>
-        <div class="spotlight-actions">
-          <a class="btn btn-red" href="${escapeHtml(data.sponsor.ctaHref)}">${escapeHtml(data.sponsor.ctaLabel)}</a>
-        </div>
+        ${data.sponsor?.checkoutEnabled ? `
+          <form id="donation-form" class="donation-form">
+            <div class="donation-presets">
+              ${suggestedAmounts.map((amount) => `<button class="donation-preset" type="button" data-donation-amount="${amount}">${amount} €</button>`).join("")}
+            </div>
+            <div class="donation-grid">
+              <label><span>${escapeHtml(data.labels?.sponsorAmount || "Montant")}</span><input id="donation-amount" type="number" min="${minAmount}" step="1" placeholder="${minAmount}" required></label>
+              <label><span>${escapeHtml(data.labels?.sponsorFirstName || "Prénom")}</span><input type="text" name="firstName" required></label>
+              <label><span>${escapeHtml(data.labels?.sponsorLastName || "Nom")}</span><input type="text" name="lastName" required></label>
+              <label><span>${escapeHtml(data.labels?.sponsorEmail || "E-mail")}</span><input type="email" name="email" required></label>
+            </div>
+            <div class="spotlight-actions">
+              <button class="btn btn-red" type="submit">${escapeHtml(data.sponsor.ctaLabel || "Faire un don")}</button>
+            </div>
+            <p id="donation-status" class="form-status"></p>
+          </form>
+        ` : `
+          <div class="spotlight-actions">
+            ${data.sponsor.ctaHref ? `<a class="btn btn-red" href="${escapeHtml(data.sponsor.ctaHref)}">${escapeHtml(data.sponsor.ctaLabel || "Ouvrir")}</a>` : ""}
+          </div>
+        `}
       </article>
+    </section>
+  `;
+}
+
+function renderCustomSection(data, section) {
+  const blocks = (data.customBlocks || [])
+    .filter((item) => Number(item.enabled) === 1)
+    .sort((a, b) => Number(a.display_order) - Number(b.display_order));
+  return `
+    <section class="section-shell">
+      <div class="section-head">
+        <div>
+          <div class="section-tag">${escapeHtml(section.title || "Blocs personnalisés")}</div>
+          <h2>${escapeHtml(section.subtitle || "Composez librement le site.")}</h2>
+        </div>
+      </div>
+      <div class="custom-block-grid">
+        ${blocks.map((item) => {
+          const width = Math.min(100, Math.max(30, Number(item.width_percent) || 100));
+          const height = Math.min(760, Math.max(180, Number(item.height_px) || 360));
+          return `
+          <article class="custom-block" style="--custom-block-width:${width}%;--custom-block-height:${height}px">
+            ${item.image_url ? `<img src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.title)}" loading="lazy">` : ""}
+            <div class="custom-block-copy">
+              <h3>${escapeHtml(item.title)}</h3>
+              <p>${escapeHtml(item.body)}</p>
+              ${item.cta_href ? `<a class="btn btn-red" href="${escapeHtml(item.cta_href)}">${escapeHtml(item.cta_label || "Ouvrir")}</a>` : ""}
+            </div>
+          </article>`;
+        }).join("")}
+      </div>
     </section>
   `;
 }
@@ -386,7 +549,7 @@ function renderContactSection(data, section) {
             loading="lazy"
             referrerpolicy="no-referrer-when-downgrade"
             allowfullscreen
-            title="Plan d'accès au club">
+            title="${escapeHtml(data.labels?.contactMapTitle || "Plan d'accès au club")}">
             </iframe>
             </div>` : ""}
         </article>
@@ -419,6 +582,7 @@ function renderSections(data) {
     resources: renderResourcesSection,
     equipment: renderEquipmentSection,
     sponsor: renderSponsorSection,
+    custom: renderCustomSection,
     contact: renderContactSection,
   };
   const html = (data.sections || [])
@@ -433,7 +597,7 @@ function renderMainMap(url) {
   if (!host) return;
 
   if (!url) {
-    host.innerHTML = "<p>Carte indisponible</p>";
+    host.innerHTML = `<p>${escapeHtml(window.__siteData?.labels?.mapUnavailable || "Carte indisponible")}</p>`;
     return;
   }
 
@@ -443,7 +607,7 @@ function renderMainMap(url) {
   loading="lazy"
   referrerpolicy="no-referrer-when-downgrade"
   allowfullscreen
-  title="Localisation du club">
+  title="${escapeHtml(window.__siteData?.labels?.contactMapTitle || "Localisation du club")}">
   </iframe>
   `;
 }
@@ -531,14 +695,86 @@ async function bindContactForm() {
   });
 }
 
+async function bindDonationForm() {
+  const form = document.getElementById("donation-form");
+  if (!form) return;
+  const status = document.getElementById("donation-status");
+  const amountInput = document.getElementById("donation-amount");
+
+  document.querySelectorAll("[data-donation-amount]").forEach((button) => {
+    button.addEventListener("click", () => {
+      amountInput.value = button.getAttribute("data-donation-amount") || "";
+    });
+  });
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    status.textContent = "Redirection vers HelloAsso...";
+    const formData = new FormData(form);
+    const amount = Number.parseInt(String(amountInput.value || ""), 10);
+    const response = await fetch("/api/donations/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        firstName: formData.get("firstName"),
+        lastName: formData.get("lastName"),
+        email: formData.get("email"),
+        amountCents: amount * 100,
+      }),
+    });
+    const payload = await response.json();
+    if (!response.ok || !payload.ok) {
+      status.textContent = payload.error || "Impossible de créer le paiement.";
+      return;
+    }
+    window.location.href = payload.data.redirectUrl;
+  });
+}
+
+async function bindDonationReturn() {
+  const status = document.getElementById("donation-status");
+  if (!status) return;
+  const params = new URLSearchParams(window.location.search);
+  const checkoutIntentId = params.get("checkoutIntentId");
+  const code = params.get("code");
+  const flow = params.get("ha_checkout");
+  const error = params.get("error");
+
+  if (!checkoutIntentId && !flow) return;
+
+  if (flow === "back") {
+    status.textContent = "Paiement annulé avant validation.";
+    return;
+  }
+
+  if (flow === "error" || error) {
+    status.textContent = "Une erreur est survenue pendant le paiement. Vous pouvez réessayer.";
+    return;
+  }
+
+  if (checkoutIntentId && code === "succeeded") {
+    status.textContent = "Vérification du paiement...";
+    try {
+      const response = await fetch(`/api/donations/checkout-status?intentId=${encodeURIComponent(checkoutIntentId)}`);
+      const payload = await response.json();
+      if (!response.ok || !payload.ok) throw new Error(payload.error || "Vérification impossible");
+      const payerEmail = payload.data?.order?.payer?.email;
+      status.textContent = payerEmail
+        ? `Merci, votre don a bien été enregistré pour ${payerEmail}.`
+        : "Merci, votre don a bien été enregistré.";
+    } catch (errorCaught) {
+      status.textContent = errorCaught instanceof Error ? errorCaught.message : "Merci, retour reçu depuis HelloAsso.";
+    }
+  }
+}
+
 window.addEventListener("DOMContentLoaded", async () => {
   try {
     const data = await fetchBootstrap();
     document.title = data.site.name || "American Full Fighting Bons en Chablais";
-    setMetaContent('meta[name="description"]', `${data.site.name || "American Full Fighting Bons en Chablais"} : club de full contact, informations pratiques, entraînements et accès utiles.`);
-    setMetaContent('meta[property="og:title"]', data.site.name || "American Full Fighting Bons en Chablais");
-    setMetaContent('meta[property="og:description"]', "Découvrez le club, les séances, les tarifs et les accès utiles de la saison.");
     applyDesign(data);
+    applyBrandAssets(data);
+    applyMeta(data);
     applyStaticContent(data);
     setText("hero-kicker", data.hero.kicker);
     setText("hero-title", data.hero.title);
@@ -549,14 +785,16 @@ window.addEventListener("DOMContentLoaded", async () => {
     setText("site-email", data.site.email);
     setText("site-phone", data.site.phone);
     setText("site-address", data.site.address);
-    setText("footer-note", data.site.footerNote);
     setText("inpi-note", data.inpiNote);
     setLink("hero-primary", data.hero.primaryLabel, data.hero.primaryHref);
     setLink("hero-secondary", data.hero.secondaryLabel, data.hero.secondaryHref);
     renderTopLinks(data.links || []);
     renderSections(data);
+    renderFooter(data);
     initGalleryCarousels();
     bindContactForm();
+    bindDonationForm();
+    bindDonationReturn();
   } catch (error) {
     setText("hero-body", error instanceof Error ? error.message : "Chargement impossible");
   }

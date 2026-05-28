@@ -14,6 +14,8 @@ Site public pour l'American Full Fighting Bons en Chablais, pensé pour Cloudfla
 - `GET /api/health`
 - `GET /api/bootstrap`
 - `POST /api/contact`
+- `POST /api/donations/checkout`
+- `GET /api/donations/checkout-status`
 - `POST /api/auth/login`
 - `GET /api/auth/session`
 - `POST /api/auth/logout`
@@ -68,6 +70,10 @@ wrangler secret put SESSION_SECRET
 
 # Clé API Brevo pour l'envoi des e-mails de contact
 wrangler secret put BREVO_API_KEY
+
+# Identifiants HelloAsso Checkout
+wrangler secret put HELLOASSO_CLIENT_ID
+wrangler secret put HELLOASSO_CLIENT_SECRET
 ```
 
 4. Supprimer ou changer `ENV` dans les `vars` de `wrangler.json` pour la production  
@@ -91,5 +97,7 @@ npm run deploy
   Pour une protection renforcée en production, ajouter une Cloudflare Rate Limiting Rule sur `/api/auth/login`.
 - L'upload d'images (`/api/admin/upload`) n'est pas encore implémenté.  
   Pour ajouter une image, collez directement une URL dans le champ correspondant de l'admin.
+- Le checkout HelloAsso nécessite aussi de renseigner dans l'admin :
+  `URL publique du site`, `Slug organisation HelloAsso` et l'activation du checkout mécénat.
 - Le contenu initial est inspiré du site public `americanfullfightingbons.fr`.
 - Le site reste éditable via D1 sans modifier le front.

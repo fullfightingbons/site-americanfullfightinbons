@@ -10,6 +10,9 @@ interface Env {
   CONTACT_FORM_TO_EMAIL?: string;
   BREVO_API_KEY?: string;
   SESSION_SECRET?: string;
+  HELLOASSO_CLIENT_ID?: string;
+  HELLOASSO_CLIENT_SECRET?: string;
+  SITE_PUBLIC_URL?: string;
   /** Set to "dev" in wrangler.json vars to disable the Secure cookie flag locally */
   ENV?: string;
 }
@@ -47,6 +50,8 @@ const PUBLIC_TABLES = new Set([
   "highlights",
   "gallery_items",
   "partner_links",
+  "custom_buttons",
+  "custom_blocks",
   "pricing_plans",
   "resource_cards",
   "equipment_items",
@@ -64,7 +69,7 @@ const EDITABLE_TABLES = {
   },
   team_members: {
     primaryKey: "id",
-    allowedColumns: ["id", "full_name", "role_label", "belt_label", "bio", "display_order"],
+    allowedColumns: ["id", "full_name", "role_label", "belt_label", "bio", "image_url", "display_order"],
   },
   highlights: {
     primaryKey: "id",
@@ -77,6 +82,14 @@ const EDITABLE_TABLES = {
   partner_links: {
     primaryKey: "id",
     allowedColumns: ["id", "title", "href", "description", "cta_label", "display_order"],
+  },
+  custom_buttons: {
+    primaryKey: "id",
+    allowedColumns: ["id", "label", "href", "placement", "style", "enabled", "display_order"],
+  },
+  custom_blocks: {
+    primaryKey: "id",
+    allowedColumns: ["id", "title", "body", "image_url", "cta_label", "cta_href", "width_percent", "height_px", "enabled", "display_order"],
   },
   resource_cards: {
     primaryKey: "id",
@@ -247,6 +260,14 @@ function sanitizeText(value: unknown, maxLength: number): string {
   return String(value ?? "").trim().replace(/\s+/g, " ").slice(0, maxLength);
 }
 
+function sanitizeEmail(value: unknown, maxLength: number): string {
+  return String(value ?? "").trim().slice(0, maxLength).toLowerCase();
+}
+
+function sanitizeUrl(value: unknown, maxLength: number): string {
+  return String(value ?? "").trim().slice(0, maxLength);
+}
+
 function normalizeDbValue(value: unknown): unknown {
   if (value === undefined) return null;
   if (typeof value === "boolean") return value ? 1 : 0;
@@ -260,6 +281,11 @@ function escapeHtmlText(value: string): string {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+}
+
+function parseBooleanSetting(value: unknown): boolean {
+  const normalized = String(value ?? "").trim().toLowerCase();
+  return normalized === "1" || normalized === "true" || normalized === "yes" || normalized === "on";
 }
 
 async function readTable<T = Row>(db: D1Database, sql: string, bindings: unknown[] = []): Promise<T[]> {
@@ -289,20 +315,45 @@ function publicResponseSettings(settings: Record<string, string>, env: Env): Rec
     club_name: settings.club_name || env.SITE_NAME || "American Full Fighting Bons en Chablais",
     brand_primary: settings.brand_primary || "AMERICAN FULL FIGHTING",
     brand_secondary: settings.brand_secondary || "BONS EN CHABLAIS",
+    site_logo_url: settings.site_logo_url || "/assets/logo-affbc.png",
+    favicon_url: settings.favicon_url || "/assets/logo-affbc.png",
+    site_public_url: settings.site_public_url || env.SITE_PUBLIC_URL || "",
+    meta_description:
+      settings.meta_description ||
+      `${settings.club_name || env.SITE_NAME || "American Full Fighting Bons en Chablais"} : club premium de full contact et boxe américaine. Entraînements, stages, inscriptions et informations pratiques.`,
+    meta_keywords:
+      settings.meta_keywords ||
+      "american full fighting, boxe américaine, full contact, kick boxing, Bons-en-Chablais, Chablais",
     site_ambient_image:
       settings.site_ambient_image ||
       "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1600&q=80",
+    theme_primary_color: settings.theme_primary_color || "#d84a2f",
+    theme_secondary_color: settings.theme_secondary_color || "#d6ac54",
+    theme_heading_font: settings.theme_heading_font || "'Space Grotesk', sans-serif",
+    theme_body_font: settings.theme_body_font || "'Archivo', sans-serif",
+    theme_nav_font: settings.theme_nav_font || settings.theme_body_font || "'Archivo', sans-serif",
+    theme_button_font: settings.theme_button_font || settings.theme_body_font || "'Archivo', sans-serif",
+    theme_card_title_font: settings.theme_card_title_font || settings.theme_heading_font || "'Space Grotesk', sans-serif",
+    theme_card_body_font: settings.theme_card_body_font || settings.theme_body_font || "'Archivo', sans-serif",
     nav_club_label: settings.nav_club_label || "Club",
+    nav_club_enabled: settings.nav_club_enabled || "1",
     nav_schedule_label: settings.nav_schedule_label || "Séances",
+    nav_schedule_enabled: settings.nav_schedule_enabled || "1",
     nav_pricing_label: settings.nav_pricing_label || "Tarifs",
+    nav_pricing_enabled: settings.nav_pricing_enabled || "1",
     nav_contact_label: settings.nav_contact_label || "Contact",
+    nav_contact_enabled: settings.nav_contact_enabled || "1",
     nav_inscription_label: settings.nav_inscription_label || "Inscription",
     nav_inscription_href: settings.nav_inscription_href || "https://inscription.americanfullfightingbons.fr/",
+    nav_inscription_enabled: settings.nav_inscription_enabled || "1",
     nav_calendar_label: settings.nav_calendar_label || "Calendrier",
     nav_calendar_href: settings.nav_calendar_href || "https://calendrier.americanfullfightingbons.fr/",
+    nav_calendar_enabled: settings.nav_calendar_enabled || "1",
     nav_shop_label: settings.nav_shop_label || "Boutique",
     nav_shop_href: settings.nav_shop_href || "https://boutique.americanfullfightingbons.fr/",
+    nav_shop_enabled: settings.nav_shop_enabled || "1",
     quick_links_cta_label: settings.quick_links_cta_label || "Accéder",
+    browser_title: settings.browser_title || settings.club_name || env.SITE_NAME || "American Full Fighting Bons en Chablais",
     hero_kicker: settings.hero_kicker || "",
     hero_title: settings.hero_title || "",
     hero_body: settings.hero_body || "",
@@ -311,10 +362,13 @@ function publicResponseSettings(settings: Record<string, string>, env: Env): Rec
       "https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?auto=format&fit=crop&w=1800&q=80",
     hero_link_inscription_label: settings.hero_link_inscription_label || "Site d'inscription",
     hero_link_inscription_href: settings.hero_link_inscription_href || "https://inscription.americanfullfightingbons.fr/",
+    hero_link_inscription_enabled: settings.hero_link_inscription_enabled || "1",
     hero_link_calendar_label: settings.hero_link_calendar_label || "Site calendrier",
     hero_link_calendar_href: settings.hero_link_calendar_href || "https://calendrier.americanfullfightingbons.fr/",
+    hero_link_calendar_enabled: settings.hero_link_calendar_enabled || "1",
     hero_link_shop_label: settings.hero_link_shop_label || "Boutique",
     hero_link_shop_href: settings.hero_link_shop_href || "https://boutique.americanfullfightingbons.fr/",
+    hero_link_shop_enabled: settings.hero_link_shop_enabled || "1",
     announcement_badge: settings.announcement_badge || "",
     announcement_title: settings.announcement_title || "",
     announcement_body: settings.announcement_body || "",
@@ -333,8 +387,10 @@ function publicResponseSettings(settings: Record<string, string>, env: Env): Rec
       "Cours mixtes, progression suivie, objectifs clairs et séances pensées pour développer technique, condition physique et confiance.",
     hero_primary_label: settings.hero_primary_label || "Préinscription",
     hero_primary_href: settings.hero_primary_href || "https://inscription.americanfullfightingbons.fr/",
+    hero_primary_enabled: settings.hero_primary_enabled || "1",
     hero_secondary_label: settings.hero_secondary_label || "Voir le calendrier",
     hero_secondary_href: settings.hero_secondary_href || "https://calendrier.americanfullfightingbons.fr/",
+    hero_secondary_enabled: settings.hero_secondary_enabled || "1",
     footer_note: settings.footer_note || "American Full Fighting Bons en Chablais",
     spotlight_date: settings.spotlight_date || "",
     spotlight_title: settings.spotlight_title || "",
@@ -347,8 +403,10 @@ function publicResponseSettings(settings: Record<string, string>, env: Env): Rec
       "https://images.unsplash.com/photo-1517438984742-1262db08379e?auto=format&fit=crop&w=1800&q=80",
     spotlight_cta_label: settings.spotlight_cta_label || "Voir le calendrier",
     spotlight_cta_href: settings.spotlight_cta_href || "https://calendrier.americanfullfightingbons.fr/",
+    spotlight_cta_enabled: settings.spotlight_cta_enabled || "1",
     spotlight_secondary_label: settings.spotlight_secondary_label || "Dossier d'inscription",
     spotlight_secondary_href: settings.spotlight_secondary_href || "https://inscription.americanfullfightingbons.fr/",
+    spotlight_secondary_enabled: settings.spotlight_secondary_enabled || "1",
     gallery_intro:
       settings.gallery_intro ||
       "Une sélection d'images pour retrouver l'énergie du club, le rythme des séances et les temps forts de la saison.",
@@ -372,6 +430,15 @@ function publicResponseSettings(settings: Record<string, string>, env: Env): Rec
     sponsor_body: settings.sponsor_body || "",
     sponsor_cta_label: settings.sponsor_cta_label || "Faire un don",
     sponsor_cta_href: settings.sponsor_cta_href || "mailto:fullfightingbons@gmail.com",
+    sponsor_checkout_enabled: settings.sponsor_checkout_enabled || "0",
+    sponsor_checkout_org_slug: settings.sponsor_checkout_org_slug || "",
+    sponsor_checkout_item_name: settings.sponsor_checkout_item_name || "Don à l'association",
+    sponsor_checkout_min_amount_eur: settings.sponsor_checkout_min_amount_eur || "5",
+    sponsor_checkout_suggested_amounts: settings.sponsor_checkout_suggested_amounts || "20,50,100",
+    sponsor_amount_label: settings.sponsor_amount_label || "Montant",
+    sponsor_first_name_label: settings.sponsor_first_name_label || "Prénom",
+    sponsor_last_name_label: settings.sponsor_last_name_label || "Nom",
+    sponsor_email_label: settings.sponsor_email_label || "E-mail",
     contact_intro:
       settings.contact_intro ||
       "Pour une question, une séance d'essai ou une demande sur la saison, le club peut être joint directement ici.",
@@ -387,93 +454,193 @@ function publicResponseSettings(settings: Record<string, string>, env: Env): Rec
     contact_phone_label: settings.contact_phone_label || "Téléphone",
     contact_message_label: settings.contact_message_label || "Message",
     contact_submit_label: settings.contact_submit_label || "Envoyer",
+    contact_map_unavailable_label: settings.contact_map_unavailable_label || "Carte indisponible",
+    contact_map_title: settings.contact_map_title || "Plan d'accès au club",
     inpi_note: settings.inpi_note || "",
+    social_facebook_url: settings.social_facebook_url || "",
+    social_instagram_url: settings.social_instagram_url || "",
+    social_youtube_url: settings.social_youtube_url || "",
+    social_tiktok_url: settings.social_tiktok_url || "",
+    social_whatsapp_url: settings.social_whatsapp_url || "",
+    footer_legal: settings.footer_legal || "",
+    footer_meta: settings.footer_meta || "",
   };
 }
 
 async function readSharedPricing(env: Env): Promise<Row[]> {
   if (!env.AFFBC_DB) return [];
-  const keys = [
-    "public_inscription_tarif_base",
-    "public_inscription_tarif_famille",
-    "public_inscription_tarif_pro",
-    "public_inscription_pass_region_homme",
-    "public_inscription_pass_region_femme",
-    "public_inscription_supplement_tenue",
-    "public_inscription_tarif_passeport",
-  ];
-  const placeholders = keys.map(() => "?").join(", ");
-  const rows = await readTable<{ cle: string; valeur: string }>(
-    env.AFFBC_DB,
-    `SELECT cle, valeur FROM club_info WHERE cle IN (${placeholders})`,
-    keys
+  try {
+    const keys = [
+      "public_inscription_tarif_base",
+      "public_inscription_tarif_famille",
+      "public_inscription_tarif_pro",
+      "public_inscription_pass_region_homme",
+      "public_inscription_pass_region_femme",
+      "public_inscription_supplement_tenue",
+      "public_inscription_tarif_passeport",
+    ];
+    const placeholders = keys.map(() => "?").join(", ");
+    const rows = await readTable<{ cle: string; valeur: string }>(
+      env.AFFBC_DB,
+      `SELECT cle, valeur FROM club_info WHERE cle IN (${placeholders})`,
+      keys
+    );
+    const map = Object.fromEntries(rows.map((row) => [row.cle, row.valeur]));
+    return [
+      {
+        id: "shared-base",
+        title: "Tarif de base",
+        price_label: `${Number(map.public_inscription_tarif_base || 250)} €`,
+        description: "Cotisation annuelle pour les cours du club.",
+        badge: "Saison",
+        display_order: 1,
+      },
+      {
+        id: "shared-family",
+        title: "Tarif famille",
+        price_label: `${Number(map.public_inscription_tarif_famille || 200)} €`,
+        description: "Tarif appliqué selon les conditions prévues pour les familles.",
+        badge: "Réduction",
+        display_order: 2,
+      },
+      {
+        id: "shared-pro",
+        title: "Tarif professionnel",
+        price_label: `${Number(map.public_inscription_tarif_pro || 125)} €`,
+        description: "Forces de l'ordre, pompiers, sécurité et assimilés sur justificatif.",
+        badge: "Justificatif",
+        display_order: 3,
+      },
+      {
+        id: "shared-pass",
+        title: "Pass Région",
+        price_label: `${Number(map.public_inscription_pass_region_homme || 30)} € / ${Number(
+          map.public_inscription_pass_region_femme || 60
+        )} €`,
+        description: "Aide possible selon la situation déclarée lors de l'inscription.",
+        badge: "Aide",
+        display_order: 4,
+      },
+      {
+        id: "shared-kit",
+        title: "Tenue et passeport",
+        price_label: `${Number(map.public_inscription_supplement_tenue || 40)} € + ${Number(
+          map.public_inscription_tarif_passeport || 25
+        )} €`,
+        description: "Éléments complémentaires selon les besoins de la saison.",
+        badge: "Complément",
+        display_order: 5,
+      },
+    ];
+  } catch (error) {
+    console.warn("Shared pricing unavailable, falling back to local pricing.", error);
+    return [];
+  }
+}
+
+function resolvePublicBaseUrl(settings: Record<string, string>, env: Env, request: Request): string {
+  const configured = sanitizeUrl(settings.site_public_url || env.SITE_PUBLIC_URL, 300).replace(/\/+$/, "");
+  if (configured) return configured;
+  const origin = new URL(request.url).origin.replace(/\/+$/, "");
+  if (origin.startsWith("https://")) return origin;
+  throw new Error("SITE_PUBLIC_URL manquant pour initialiser le checkout HelloAsso.");
+}
+
+async function fetchHelloAssoAccessToken(env: Env): Promise<string> {
+  const clientId = sanitizeText(env.HELLOASSO_CLIENT_ID, 200);
+  const clientSecret = sanitizeText(env.HELLOASSO_CLIENT_SECRET, 240);
+  if (!clientId || !clientSecret) {
+    throw new Error("Configuration HelloAsso incomplète côté serveur.");
+  }
+
+  const body = new URLSearchParams();
+  body.set("grant_type", "client_credentials");
+  body.set("client_id", clientId);
+  body.set("client_secret", clientSecret);
+
+  const response = await fetch("https://api.helloasso.com/oauth2/token", {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: body.toString(),
+  });
+  const payload = (await response.json().catch(() => ({}))) as Row;
+  if (!response.ok || !payload.access_token) {
+    throw new Error(String(payload.error_description || payload.message || "Authentification HelloAsso impossible."));
+  }
+  return String(payload.access_token);
+}
+
+async function createHelloAssoCheckoutIntent(
+  env: Env,
+  organizationSlug: string,
+  accessToken: string,
+  values: Row
+): Promise<Row> {
+  const response = await fetch(`https://api.helloasso.com/v5/organizations/${encodeURIComponent(organizationSlug)}/checkout-intents`, {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${accessToken}`,
+      "content-type": "application/json",
+      accept: "application/json",
+    },
+    body: JSON.stringify(values),
+  });
+  const payload = (await response.json().catch(() => ({}))) as Row;
+  if (!response.ok) {
+    const details = Array.isArray(payload.errors)
+      ? payload.errors.map((item) => String((item as Row).message || "")).filter(Boolean).join(" ")
+      : "";
+    throw new Error(details || String(payload.message || payload.title || "Création du checkout HelloAsso impossible."));
+  }
+  return payload;
+}
+
+async function getHelloAssoCheckoutIntent(
+  env: Env,
+  organizationSlug: string,
+  accessToken: string,
+  checkoutIntentId: string
+): Promise<Row> {
+  const response = await fetch(
+    `https://api.helloasso.com/v5/organizations/${encodeURIComponent(organizationSlug)}/checkout-intents/${encodeURIComponent(
+      checkoutIntentId
+    )}`,
+    {
+      method: "GET",
+      headers: {
+        authorization: `Bearer ${accessToken}`,
+        accept: "application/json",
+      },
+    }
   );
-  const map = Object.fromEntries(rows.map((row) => [row.cle, row.valeur]));
-  return [
-    {
-      id: "shared-base",
-      title: "Tarif de base",
-      price_label: `${Number(map.public_inscription_tarif_base || 250)} €`,
-      description: "Cotisation annuelle pour les cours du club.",
-      badge: "Saison",
-      display_order: 1,
-    },
-    {
-      id: "shared-family",
-      title: "Tarif famille",
-      price_label: `${Number(map.public_inscription_tarif_famille || 200)} €`,
-      description: "Tarif appliqué selon les conditions prévues pour les familles.",
-      badge: "Réduction",
-      display_order: 2,
-    },
-    {
-      id: "shared-pro",
-      title: "Tarif professionnel",
-      price_label: `${Number(map.public_inscription_tarif_pro || 125)} €`,
-      description: "Forces de l'ordre, pompiers, sécurité et assimilés sur justificatif.",
-      badge: "Justificatif",
-      display_order: 3,
-    },
-    {
-      id: "shared-pass",
-      title: "Pass Région",
-      price_label: `${Number(map.public_inscription_pass_region_homme || 30)} € / ${Number(
-        map.public_inscription_pass_region_femme || 60
-      )} €`,
-      description: "Aide possible selon la situation déclarée lors de l'inscription.",
-      badge: "Aide",
-      display_order: 4,
-    },
-    {
-      id: "shared-kit",
-      title: "Tenue et passeport",
-      price_label: `${Number(map.public_inscription_supplement_tenue || 40)} € + ${Number(
-        map.public_inscription_tarif_passeport || 25
-      )} €`,
-      description: "Éléments complémentaires selon les besoins de la saison.",
-      badge: "Complément",
-      display_order: 5,
-    },
-  ];
+  const payload = (await response.json().catch(() => ({}))) as Row;
+  if (!response.ok) {
+    throw new Error(String(payload.message || payload.title || "Lecture du checkout HelloAsso impossible."));
+  }
+  return payload;
 }
 
 async function getBootstrap(env: Env): Promise<Row> {
   const settings = publicResponseSettings(await readSettingsMap(env.DB), env);
-  const [sections, schedule, team, highlights, gallery, links, resources, equipment, fallbackPricing, sharedPricing] = await Promise.all([
+  const [sections, schedule, team, highlights, gallery, links, customButtons, customBlocks, resources, equipment, fallbackPricing, sharedPricing] = await Promise.all([
     readTable(env.DB, "SELECT * FROM landing_sections ORDER BY display_order, id"),
     readTable(env.DB, "SELECT * FROM schedule_slots ORDER BY display_order, id"),
     readTable(env.DB, "SELECT * FROM team_members ORDER BY display_order, id"),
     readTable(env.DB, "SELECT * FROM highlights ORDER BY display_order, id"),
     readTable(env.DB, "SELECT * FROM gallery_items ORDER BY display_order, id"),
     readTable(env.DB, "SELECT * FROM partner_links ORDER BY display_order, id"),
+    readTable(env.DB, "SELECT * FROM custom_buttons ORDER BY display_order, id"),
+    readTable(env.DB, "SELECT * FROM custom_blocks ORDER BY display_order, id"),
     readTable(env.DB, "SELECT * FROM resource_cards ORDER BY display_order, id"),
     readTable(env.DB, "SELECT * FROM equipment_items ORDER BY display_order, id"),
     readTable(env.DB, "SELECT * FROM pricing_plans ORDER BY display_order, id"),
     readSharedPricing(env),
   ]);
   return {
+    sitePublicUrl: settings.site_public_url,
     site: {
       name: settings.club_name,
+      browserTitle: settings.browser_title,
       brandPrimary: settings.brand_primary,
       brandSecondary: settings.brand_secondary,
       email: settings.contact_email,
@@ -483,26 +650,53 @@ async function getBootstrap(env: Env): Promise<Row> {
     },
     navigation: {
       clubLabel: settings.nav_club_label,
+      clubEnabled: parseBooleanSetting(settings.nav_club_enabled),
       scheduleLabel: settings.nav_schedule_label,
+      scheduleEnabled: parseBooleanSetting(settings.nav_schedule_enabled),
       pricingLabel: settings.nav_pricing_label,
+      pricingEnabled: parseBooleanSetting(settings.nav_pricing_enabled),
       contactLabel: settings.nav_contact_label,
+      contactEnabled: parseBooleanSetting(settings.nav_contact_enabled),
       inscriptionLabel: settings.nav_inscription_label,
       inscriptionHref: settings.nav_inscription_href,
+      inscriptionEnabled: parseBooleanSetting(settings.nav_inscription_enabled),
       calendarLabel: settings.nav_calendar_label,
       calendarHref: settings.nav_calendar_href,
+      calendarEnabled: parseBooleanSetting(settings.nav_calendar_enabled),
       shopLabel: settings.nav_shop_label,
       shopHref: settings.nav_shop_href,
+      shopEnabled: parseBooleanSetting(settings.nav_shop_enabled),
     },
     labels: {
       quickLinkCta: settings.quick_links_cta_label,
       contactEmailTitle: settings.contact_email_title,
       contactPhoneTitle: settings.contact_phone_title,
       contactAddressTitle: settings.contact_address_title,
+      mapUnavailable: settings.contact_map_unavailable_label,
+      contactMapTitle: settings.contact_map_title,
+      sponsorAmount: settings.sponsor_amount_label,
+      sponsorFirstName: settings.sponsor_first_name_label,
+      sponsorLastName: settings.sponsor_last_name_label,
+      sponsorEmail: settings.sponsor_email_label,
     },
     design: {
       siteAmbientImage: settings.site_ambient_image,
       heroBackgroundImage: settings.hero_background_image,
       spotlightBackgroundImage: settings.spotlight_background_image,
+      primaryColor: settings.theme_primary_color,
+      secondaryColor: settings.theme_secondary_color,
+      headingFont: settings.theme_heading_font,
+      bodyFont: settings.theme_body_font,
+      navFont: settings.theme_nav_font,
+      buttonFont: settings.theme_button_font,
+      cardTitleFont: settings.theme_card_title_font,
+      cardBodyFont: settings.theme_card_body_font,
+      logoUrl: settings.site_logo_url,
+      faviconUrl: settings.favicon_url,
+    },
+    meta: {
+      description: settings.meta_description,
+      keywords: settings.meta_keywords,
     },
     hero: {
       kicker: settings.hero_kicker,
@@ -510,12 +704,14 @@ async function getBootstrap(env: Env): Promise<Row> {
       body: settings.hero_body,
       primaryLabel: settings.hero_primary_label,
       primaryHref: settings.hero_primary_href,
+      primaryEnabled: parseBooleanSetting(settings.hero_primary_enabled),
       secondaryLabel: settings.hero_secondary_label,
       secondaryHref: settings.hero_secondary_href,
+      secondaryEnabled: parseBooleanSetting(settings.hero_secondary_enabled),
       utilityLinks: [
-        { label: settings.hero_link_inscription_label, href: settings.hero_link_inscription_href },
-        { label: settings.hero_link_calendar_label, href: settings.hero_link_calendar_href },
-        { label: settings.hero_link_shop_label, href: settings.hero_link_shop_href },
+        { label: settings.hero_link_inscription_label, href: settings.hero_link_inscription_href, enabled: parseBooleanSetting(settings.hero_link_inscription_enabled) },
+        { label: settings.hero_link_calendar_label, href: settings.hero_link_calendar_href, enabled: parseBooleanSetting(settings.hero_link_calendar_enabled) },
+        { label: settings.hero_link_shop_label, href: settings.hero_link_shop_href, enabled: parseBooleanSetting(settings.hero_link_shop_enabled) },
       ],
     },
     announcement: {
@@ -538,8 +734,10 @@ async function getBootstrap(env: Env): Promise<Row> {
       body: settings.spotlight_body,
       primaryLabel: settings.spotlight_cta_label,
       primaryHref: settings.spotlight_cta_href,
+      primaryEnabled: parseBooleanSetting(settings.spotlight_cta_enabled),
       secondaryLabel: settings.spotlight_secondary_label,
       secondaryHref: settings.spotlight_secondary_href,
+      secondaryEnabled: parseBooleanSetting(settings.spotlight_secondary_enabled),
     },
     galleryIntro: settings.gallery_intro,
     resourcesIntro: settings.resources_intro,
@@ -555,6 +753,19 @@ async function getBootstrap(env: Env): Promise<Row> {
       body: settings.sponsor_body,
       ctaLabel: settings.sponsor_cta_label,
       ctaHref: settings.sponsor_cta_href,
+      checkoutEnabled:
+        parseBooleanSetting(settings.sponsor_checkout_enabled) &&
+        !!sanitizeText(settings.sponsor_checkout_org_slug, 160) &&
+        !!sanitizeText(env.HELLOASSO_CLIENT_ID, 200) &&
+        !!sanitizeText(env.HELLOASSO_CLIENT_SECRET, 200),
+      checkoutMinAmountEur: settings.sponsor_checkout_min_amount_eur,
+      checkoutSuggestedAmounts: settings.sponsor_checkout_suggested_amounts
+        .split(",")
+        .map((item) => Number.parseInt(item.trim(), 10))
+        .filter((item) => Number.isFinite(item) && item > 0)
+        .slice(0, 6),
+      checkoutItemName: settings.sponsor_checkout_item_name,
+      checkoutOrganizationSlug: settings.sponsor_checkout_org_slug,
     },
     contactIntro: settings.contact_intro,
     contactForm: {
@@ -567,6 +778,17 @@ async function getBootstrap(env: Env): Promise<Row> {
       messageLabel: settings.contact_message_label,
       submitLabel: settings.contact_submit_label,
     },
+    social: {
+      facebookUrl: settings.social_facebook_url,
+      instagramUrl: settings.social_instagram_url,
+      youtubeUrl: settings.social_youtube_url,
+      tiktokUrl: settings.social_tiktok_url,
+      whatsappUrl: settings.social_whatsapp_url,
+    },
+    footer: {
+      legal: settings.footer_legal,
+      meta: settings.footer_meta,
+    },
     inpiNote: settings.inpi_note,
     sections,
     schedule,
@@ -574,6 +796,8 @@ async function getBootstrap(env: Env): Promise<Row> {
     highlights,
     gallery,
     links,
+    customButtons,
+    customBlocks,
     resources,
     equipment,
     pricing: sharedPricing.length ? sharedPricing : fallbackPricing,
@@ -646,6 +870,76 @@ async function handleContact(request: Request, env: Env): Promise<Response> {
   }
 
   return ok({ message: "Votre message a bien été enregistré. Nous vous recontacterons rapidement." });
+}
+
+async function handleDonationCheckout(request: Request, env: Env): Promise<Response> {
+  const settings = publicResponseSettings(await readSettingsMap(env.DB), env);
+  const donationEnabled = parseBooleanSetting(settings.sponsor_checkout_enabled);
+  const organizationSlug = sanitizeText(settings.sponsor_checkout_org_slug, 160);
+  if (!donationEnabled || !organizationSlug) {
+    return error("Le module de don n'est pas activé.", 400);
+  }
+
+  const payload = (await request.json()) as Row;
+  const firstName = sanitizeText(payload.firstName, 120);
+  const lastName = sanitizeText(payload.lastName, 120);
+  const email = sanitizeEmail(payload.email, 180);
+  const amountCents = Number.parseInt(String(payload.amountCents || ""), 10);
+  const minAmountEur = Number.parseInt(String(settings.sponsor_checkout_min_amount_eur || "5"), 10);
+  const minAmountCents = (Number.isFinite(minAmountEur) && minAmountEur > 0 ? minAmountEur : 5) * 100;
+
+  if (firstName.length < 2) return error("Le prénom est trop court.");
+  if (lastName.length < 2) return error("Le nom est trop court.");
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return error("Adresse e-mail invalide.");
+  if (!Number.isFinite(amountCents) || amountCents < minAmountCents) {
+    return error(`Le don minimum est de ${Math.round(minAmountCents / 100)} €.`);
+  }
+
+  const baseUrl = resolvePublicBaseUrl(settings, env, request);
+  const accessToken = await fetchHelloAssoAccessToken(env);
+  const checkout = await createHelloAssoCheckoutIntent(env, organizationSlug, accessToken, {
+    totalAmount: amountCents,
+    initialAmount: amountCents,
+    itemName: sanitizeText(settings.sponsor_checkout_item_name, 250) || "Don à l'association",
+    backUrl: `${baseUrl}/?ha_checkout=back#don`,
+    errorUrl: `${baseUrl}/?ha_checkout=error#don`,
+    returnUrl: `${baseUrl}/?ha_checkout=return#don`,
+    containsDonation: true,
+    payer: {
+      firstName,
+      lastName,
+      email,
+      country: "FRA",
+    },
+    metadata: {
+      source: "site-americanfullfightingbons",
+      email,
+      amountCents,
+    },
+  });
+
+  return ok({
+    checkoutIntentId: checkout.id,
+    redirectUrl: checkout.redirectUrl,
+  });
+}
+
+async function handleDonationCheckoutStatus(request: Request, env: Env): Promise<Response> {
+  const settings = publicResponseSettings(await readSettingsMap(env.DB), env);
+  const organizationSlug = sanitizeText(settings.sponsor_checkout_org_slug, 160);
+  if (!organizationSlug) return error("Organisation HelloAsso non configurée.", 400);
+
+  const checkoutIntentId = sanitizeText(new URL(request.url).searchParams.get("intentId"), 60);
+  if (!checkoutIntentId) return error("Identifiant du checkout requis.");
+
+  const accessToken = await fetchHelloAssoAccessToken(env);
+  const checkout = await getHelloAssoCheckoutIntent(env, organizationSlug, accessToken, checkoutIntentId);
+  return ok({
+    id: checkout.id,
+    redirectUrl: checkout.redirectUrl,
+    order: checkout.order,
+    metadata: checkout.metadata,
+  });
 }
 
 async function handleLogin(request: Request, env: Env): Promise<Response> {
@@ -867,6 +1161,12 @@ async function routeApi(request: Request, env: Env, pathname: string): Promise<R
   }
   if (pathname === "/api/contact" && request.method === "POST") {
     return handleContact(request, env);
+  }
+  if (pathname === "/api/donations/checkout" && request.method === "POST") {
+    return handleDonationCheckout(request, env);
+  }
+  if (pathname === "/api/donations/checkout-status" && request.method === "GET") {
+    return handleDonationCheckoutStatus(request, env);
   }
   if (pathname === "/api/auth/login" && request.method === "POST") {
     return handleLogin(request, env);
