@@ -662,10 +662,14 @@ img{display:block;max-width:100%}
   aspect-ratio:1.35/1;
   object-fit:cover;
 }
+.resource-card,
+.equipment-card,
 .sponsor-partner-card{
   min-width:0;
   overflow:hidden;
 }
+.resource-card .card-contained-image,
+.equipment-card .card-contained-image,
 .sponsor-partner-card .sponsor-logo{
   width:100%;
   max-width:100%;
@@ -677,6 +681,10 @@ img{display:block;max-width:100%}
   object-fit:contain;
   background:#fffefb;
 }
+.resource-card h3,
+.resource-card p,
+.equipment-card h3,
+.equipment-card p,
 .sponsor-partner-card h3,
 .sponsor-partner-card p{
   overflow-wrap:anywhere;
