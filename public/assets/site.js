@@ -475,7 +475,7 @@ function renderSponsorsSection(data, section) {
           .map(
             (item) => `
           <article class="sponsor-partner-card">
-            ${item.logo_url ? `<img src="${escapeHtml(item.logo_url)}" alt="${escapeHtml(item.name)}" loading="lazy">` : ""}
+            ${item.logo_url ? `<img class="sponsor-logo" src="${escapeHtml(item.logo_url)}" alt="${escapeHtml(item.name)}" loading="lazy">` : ""}
             <h3>${escapeHtml(item.name)}</h3>
             <p>${escapeHtml(item.description || "")}</p>
             ${item.website_url ? `<a class="cta" href="${escapeHtml(item.website_url)}" target="_blank" rel="noreferrer">Voir le site</a>` : ""}

@@ -662,6 +662,25 @@ img{display:block;max-width:100%}
   aspect-ratio:1.35/1;
   object-fit:cover;
 }
+.sponsor-partner-card{
+  min-width:0;
+  overflow:hidden;
+}
+.sponsor-partner-card .sponsor-logo{
+  width:100%;
+  max-width:100%;
+  height:auto;
+  max-height:180px;
+  padding:1rem;
+  border:1px solid var(--line);
+  aspect-ratio:16/9;
+  object-fit:contain;
+  background:#fffefb;
+}
+.sponsor-partner-card h3,
+.sponsor-partner-card p{
+  overflow-wrap:anywhere;
+}
 .resource-card .cta,.equipment-card .cta,.sponsor-partner-card .cta{
   display:inline-flex;
   margin-top:1rem;
