@@ -444,7 +444,7 @@ function renderEquipmentSection(data, section) {
           .map(
             (item) => `
           <article class="equipment-card">
-            ${item.image_url ? `<img class="card-contained-image" src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.title)}" loading="lazy">` : ""}
+            ${item.image_url ? `<img class="equipment-photo" src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.title)}" loading="lazy">` : ""}
             <h3>${escapeHtml(item.title)}</h3>
             <p>${escapeHtml(item.description)}</p>
             ${item.cta_href ? `<a class="cta" href="${escapeHtml(item.cta_href)}">${escapeHtml(item.cta_label || "Ouvrir")}</a>` : ""}
