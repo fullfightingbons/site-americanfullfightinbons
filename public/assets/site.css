@@ -20,8 +20,8 @@
   --radius:24px;
   --radius-lg:34px;
   --shadow:0 24px 60px rgba(7,17,29,.12);
-  --font-display:'Space Grotesk',sans-serif;
-  --font-body:'Archivo',sans-serif;
+  --font-display:'Sora',sans-serif;
+  --font-body:'Inter',sans-serif;
   --font-nav:var(--font-body);
   --font-button:var(--font-body);
   --font-card-title:var(--font-display);
@@ -187,7 +187,7 @@ img{display:block;max-width:100%}
   font-family:var(--font-display);
   font-size:clamp(3.4rem,8vw,6.8rem);
   line-height:.92;
-  letter-spacing:-.04em;
+  letter-spacing:0;
   text-wrap:balance;
 }
 .hero-body{
@@ -281,7 +281,7 @@ img{display:block;max-width:100%}
   font-family:var(--font-display);
   font-size:clamp(2rem,4vw,3rem);
   line-height:.95;
-  letter-spacing:-.03em;
+  letter-spacing:0;
 }
 .hero-panel p{
   margin-top:.9rem;
@@ -334,7 +334,7 @@ img{display:block;max-width:100%}
   display:block;
   font-family:var(--font-display);
   font-size:1.45rem;
-  letter-spacing:-.03em;
+  letter-spacing:0;
 }
 .quick-link-card p{
   margin-top:.5rem;
@@ -367,7 +367,7 @@ img{display:block;max-width:100%}
   font-family:var(--font-display);
   font-size:clamp(2.1rem,4vw,3.5rem);
   line-height:.96;
-  letter-spacing:-.04em;
+  letter-spacing:0;
   text-wrap:balance;
 }
 .section-head p{
@@ -387,7 +387,7 @@ img{display:block;max-width:100%}
   font-family:var(--font-display);
   font-size:2rem;
   line-height:1;
-  letter-spacing:-.04em;
+  letter-spacing:0;
 }
 .story-card p{
   margin-top:.85rem;
@@ -435,7 +435,7 @@ img{display:block;max-width:100%}
   font-family:var(--font-card-title);
   font-size:1.75rem;
   line-height:.98;
-  letter-spacing:-.04em;
+  letter-spacing:0;
 }
 .schedule-card p,.team-card p,.pricing-card p,.highlight-card p,.resource-card p,.equipment-card p,.sponsor-card p,.sponsor-partner-card p,.news-card p,.faq-card p,.testimonial-card p{
   margin-top:.75rem;
@@ -491,7 +491,7 @@ img{display:block;max-width:100%}
 .gallery-card h3{
   font-family:var(--font-display);
   font-size:1.55rem;
-  letter-spacing:-.03em;
+  letter-spacing:0;
 }
 .gallery-card p{
   margin-top:.45rem;
@@ -600,7 +600,7 @@ img{display:block;max-width:100%}
   font-family:var(--font-display);
   font-size:clamp(2.5rem,5vw,4rem);
   line-height:.92;
-  letter-spacing:-.05em;
+  letter-spacing:0;
 }
 .spotlight-card p{
   margin-top:.9rem;
@@ -784,7 +784,7 @@ img{display:block;max-width:100%}
   font-family:var(--font-display);
   font-size:2rem;
   line-height:1;
-  letter-spacing:-.04em;
+  letter-spacing:0;
 }
 .contact-card p{
   margin-top:.85rem;

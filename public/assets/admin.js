@@ -219,6 +219,39 @@ const SETTINGS_GROUPS = [
   },
 ];
 
+const FONT_OPTIONS = [
+  { label: "Sora - moderne, net", value: "'Sora', sans-serif" },
+  { label: "Inter - très lisible", value: "'Inter', sans-serif" },
+  { label: "Manrope - doux et premium", value: "'Manrope', sans-serif" },
+  { label: "Outfit - contemporain", value: "'Outfit', sans-serif" },
+  { label: "Space Grotesk - sportif", value: "'Space Grotesk', sans-serif" },
+  { label: "Archivo - dense et solide", value: "'Archivo', sans-serif" },
+  { label: "Montserrat - classique moderne", value: "'Montserrat', sans-serif" },
+  { label: "Barlow Condensed - impact titres", value: "'Barlow Condensed', sans-serif" },
+];
+
+const FONT_SETTING_KEYS = new Set([
+  "theme_heading_font",
+  "theme_body_font",
+  "theme_nav_font",
+  "theme_button_font",
+  "theme_card_title_font",
+  "theme_card_body_font",
+]);
+
+function renderFontSelect(key, value) {
+  const hasCustomValue = value && !FONT_OPTIONS.some((option) => option.value === value);
+  const options = FONT_OPTIONS
+    .map((option) => `<option value="${inputValue(option.value)}" ${option.value === value ? "selected" : ""}>${escapeHtml(option.label)}</option>`)
+    .join("");
+  return `
+    <select id="setting-${escapeHtml(key)}" name="${escapeHtml(key)}" class="vb-field-input">
+      ${hasCustomValue ? `<option value="${inputValue(value)}" selected>${escapeHtml(value)}</option>` : ""}
+      ${options}
+    </select>
+  `;
+}
+
 // Badges disponibles sur le site avec leur contexte
 const BADGE_DEFINITIONS = [
   { id: "announcement_badge", label: "Badge annonce hero", section: "hero", settingKey: true },
@@ -612,6 +645,8 @@ function renderSettingsPanel(groupId) {
                     <span>${escapeHtml(label)}</span>
                     <input id="setting-${escapeHtml(key)}" name="${escapeHtml(key)}" class="vb-field-checkbox" type="checkbox" ${checked ? "checked" : ""}>
                   </label>`
+                : FONT_SETTING_KEYS.has(key)
+                ? renderFontSelect(key, value)
                 : isLong
                 ? `<textarea id="setting-${escapeHtml(key)}" name="${escapeHtml(key)}" class="vb-field-textarea" rows="3">${escapeHtml(value)}</textarea>`
                 : `<input id="setting-${escapeHtml(key)}" name="${escapeHtml(key)}" class="vb-field-input" type="text" value="${inputValue(value)}">`
