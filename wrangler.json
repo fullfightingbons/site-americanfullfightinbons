@@ -3,6 +3,7 @@
   "name": "site-americanfullfightinbons",
   "main": "src/index.ts",
   "compatibility_date": "2026-05-22",
+  "workers_dev": true,
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",
@@ -16,6 +17,12 @@
   "observability": {
     "enabled": true
   },
+  "routes": [
+    {
+      "pattern": "americanfullfightingbons.fr",
+      "custom_domain": true
+    }
+  ],
   "vars": {
     "ENV": "dev",
     "SITE_NAME": "American Full Fighting Bons en Chablais",
