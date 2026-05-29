@@ -932,5 +932,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     bindDonationReturn();
   } catch (error) {
     setText("hero-body", error instanceof Error ? error.message : "Chargement impossible");
+  } finally {
+    document.body.classList.remove("is-loading");
   }
 });

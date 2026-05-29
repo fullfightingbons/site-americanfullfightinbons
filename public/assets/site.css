@@ -198,6 +198,12 @@ img{display:block;max-width:100%}
   color:rgba(255,255,255,.78);
 }
 .hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:2rem}
+.is-loading .hero-actions,
+.is-loading .hero-links,
+.is-loading .quick-links,
+.is-loading #page-sections{
+  visibility:hidden;
+}
 .btn{
   display:inline-flex;
   align-items:center;
