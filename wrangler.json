@@ -21,6 +21,10 @@
     {
       "pattern": "americanfullfightingbons.fr",
       "custom_domain": true
+    },
+    {
+      "pattern": "www.americanfullfightingbons.fr",
+      "custom_domain": true
     }
   ],
   "vars": {
