@@ -753,6 +753,23 @@ img{display:block;max-width:100%}
   background:transparent;
   border:1px solid var(--line-strong);
 }
+.text-center{text-align:center}
+.text-right{text-align:right}
+.text-center .meta,
+.text-center .cta,
+.text-center .btn,
+.text-center .testimonial-photo,
+.text-center .team-photo{
+  margin-left:auto;
+  margin-right:auto;
+}
+.text-right .meta,
+.text-right .cta,
+.text-right .btn,
+.text-right .testimonial-photo,
+.text-right .team-photo{
+  margin-left:auto;
+}
 .custom-block-grid{
   display:flex;
   flex-wrap:wrap;

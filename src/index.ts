@@ -73,19 +73,19 @@ const EDITABLE_TABLES = {
   },
   schedule_slots: {
     primaryKey: "id",
-    allowedColumns: ["id", "day_label", "time_label", "note", "display_order"],
+    allowedColumns: ["id", "day_label", "time_label", "note", "text_align", "display_order"],
   },
   team_members: {
     primaryKey: "id",
-    allowedColumns: ["id", "full_name", "role_label", "belt_label", "bio", "image_url", "display_order"],
+    allowedColumns: ["id", "full_name", "role_label", "belt_label", "bio", "image_url", "text_align", "display_order"],
   },
   highlights: {
     primaryKey: "id",
-    allowedColumns: ["id", "title", "body", "badge", "cta_label", "cta_href", "display_order"],
+    allowedColumns: ["id", "title", "body", "badge", "cta_label", "cta_href", "text_align", "display_order"],
   },
   gallery_items: {
     primaryKey: "id",
-    allowedColumns: ["id", "title", "image_url", "alt_text", "display_order"],
+    allowedColumns: ["id", "title", "image_url", "alt_text", "text_align", "display_order"],
   },
   partner_links: {
     primaryKey: "id",
@@ -97,31 +97,31 @@ const EDITABLE_TABLES = {
   },
   custom_blocks: {
     primaryKey: "id",
-    allowedColumns: ["id", "title", "body", "image_url", "image_fit", "cta_label", "cta_href", "width_percent", "height_px", "enabled", "display_order"],
+    allowedColumns: ["id", "title", "body", "image_url", "image_fit", "cta_label", "cta_href", "width_percent", "height_px", "text_align", "enabled", "display_order"],
   },
   resource_cards: {
     primaryKey: "id",
-    allowedColumns: ["id", "title", "description", "cta_label", "cta_href", "image_url", "image_fit", "enabled", "display_order"],
+    allowedColumns: ["id", "title", "description", "cta_label", "cta_href", "image_url", "image_fit", "text_align", "enabled", "display_order"],
   },
   equipment_items: {
     primaryKey: "id",
-    allowedColumns: ["id", "title", "description", "cta_label", "cta_href", "image_url", "image_fit", "enabled", "display_order"],
+    allowedColumns: ["id", "title", "description", "cta_label", "cta_href", "image_url", "image_fit", "text_align", "enabled", "display_order"],
   },
   sponsor_partners: {
     primaryKey: "id",
-    allowedColumns: ["id", "name", "description", "website_url", "cta_label", "logo_url", "image_fit", "featured", "enabled", "display_order"],
+    allowedColumns: ["id", "name", "description", "website_url", "cta_label", "logo_url", "image_fit", "featured", "text_align", "enabled", "display_order"],
   },
   news_items: {
     primaryKey: "id",
-    allowedColumns: ["id", "title", "body", "date_label", "badge", "cta_label", "cta_href", "image_url", "image_fit", "enabled", "display_order"],
+    allowedColumns: ["id", "title", "body", "date_label", "badge", "cta_label", "cta_href", "image_url", "image_fit", "text_align", "enabled", "display_order"],
   },
   faq_items: {
     primaryKey: "id",
-    allowedColumns: ["id", "question", "answer", "enabled", "display_order"],
+    allowedColumns: ["id", "question", "answer", "text_align", "enabled", "display_order"],
   },
   testimonials: {
     primaryKey: "id",
-    allowedColumns: ["id", "author_name", "role_label", "quote", "image_url", "image_fit", "enabled", "display_order"],
+    allowedColumns: ["id", "author_name", "role_label", "quote", "image_url", "image_fit", "text_align", "enabled", "display_order"],
   },
   media_assets: {
     primaryKey: "id",
@@ -129,7 +129,7 @@ const EDITABLE_TABLES = {
   },
   pricing_plans: {
     primaryKey: "id",
-    allowedColumns: ["id", "title", "price_label", "description", "badge", "enabled", "display_order"],
+    allowedColumns: ["id", "title", "price_label", "description", "badge", "text_align", "enabled", "display_order"],
   },
   admin_users: {
     primaryKey: "id",

@@ -765,6 +765,7 @@ function renderEntityCard(kind, item, fields) {
 const SCHEDULE_FIELDS = [
   { key: "day_label", label: "Jour" },
   { key: "time_label", label: "Horaire" },
+  { key: "text_align", label: "Alignement texte", type: "select", options: ["left", "center", "right"] },
   { key: "display_order", label: "Ordre", type: "number" },
   { key: "note", label: "Note", type: "textarea" },
 ];
@@ -774,6 +775,7 @@ const TEAM_FIELDS = [
   { key: "role_label", label: "Rôle" },
   { key: "belt_label", label: "Ceinture" },
   { key: "image_url", label: "Photo", type: "image" },
+  { key: "text_align", label: "Alignement texte", type: "select", options: ["left", "center", "right"] },
   { key: "display_order", label: "Ordre", type: "number" },
   { key: "bio", label: "Bio", type: "textarea" },
 ];
@@ -783,6 +785,7 @@ const HIGHLIGHTS_FIELDS = [
   { key: "badge", label: "Badge" },
   { key: "cta_label", label: "Texte bouton" },
   { key: "cta_href", label: "Lien bouton" },
+  { key: "text_align", label: "Alignement texte", type: "select", options: ["left", "center", "right"] },
   { key: "display_order", label: "Ordre", type: "number" },
   { key: "body", label: "Texte", type: "textarea" },
 ];
@@ -791,6 +794,7 @@ const GALLERY_FIELDS = [
   { key: "title", label: "Titre" },
   { key: "image_url", label: "Image", type: "image" },
   { key: "alt_text", label: "Texte alternatif", type: "textarea" },
+  { key: "text_align", label: "Alignement texte", type: "select", options: ["left", "center", "right"] },
   { key: "display_order", label: "Ordre", type: "number" },
 ];
 
@@ -819,6 +823,7 @@ const BLOCK_FIELDS = [
   { key: "cta_href", label: "Lien bouton" },
   { key: "width_percent", label: "Largeur (%)", type: "number" },
   { key: "height_px", label: "Hauteur image (px)", type: "number" },
+  { key: "text_align", label: "Alignement texte", type: "select", options: ["left", "center", "right"] },
   { key: "enabled", label: "Publié", type: "checkbox" },
   { key: "display_order", label: "Ordre", type: "number" },
   { key: "body", label: "Texte", type: "textarea" },
@@ -832,6 +837,7 @@ const RESOURCES_FIELDS = [
   { key: "description", label: "Description", type: "textarea" },
   { key: "image_url", label: "Image", type: "image" },
   { key: "image_fit", label: "Comportement image", type: "select", options: ["contain", "cover"] },
+  { key: "text_align", label: "Alignement texte", type: "select", options: ["left", "center", "right"] },
   { key: "enabled", label: "Publié", type: "checkbox" },
 ];
 
@@ -843,6 +849,7 @@ const EQUIPMENT_FIELDS = [
   { key: "description", label: "Description", type: "textarea" },
   { key: "image_url", label: "Photo", type: "image" },
   { key: "image_fit", label: "Comportement image", type: "select", options: ["cover", "contain"] },
+  { key: "text_align", label: "Alignement texte", type: "select", options: ["left", "center", "right"] },
   { key: "enabled", label: "Publié", type: "checkbox" },
 ];
 
@@ -853,6 +860,7 @@ const SPONSOR_PARTNER_FIELDS = [
   { key: "logo_url", label: "Logo ou photo", type: "image" },
   { key: "image_fit", label: "Comportement image", type: "select", options: ["contain", "cover"] },
   { key: "featured", label: "Sponsor principal", type: "checkbox" },
+  { key: "text_align", label: "Alignement texte", type: "select", options: ["left", "center", "right"] },
   { key: "enabled", label: "Publié", type: "checkbox" },
   { key: "display_order", label: "Ordre", type: "number" },
   { key: "description", label: "Texte associé", type: "textarea" },
@@ -866,6 +874,7 @@ const NEWS_FIELDS = [
   { key: "cta_href", label: "Lien bouton" },
   { key: "image_url", label: "Image", type: "image" },
   { key: "image_fit", label: "Comportement image", type: "select", options: ["cover", "contain"] },
+  { key: "text_align", label: "Alignement texte", type: "select", options: ["left", "center", "right"] },
   { key: "enabled", label: "Publié", type: "checkbox" },
   { key: "display_order", label: "Ordre", type: "number" },
   { key: "body", label: "Texte", type: "textarea" },
@@ -873,6 +882,7 @@ const NEWS_FIELDS = [
 
 const FAQ_FIELDS = [
   { key: "question", label: "Question" },
+  { key: "text_align", label: "Alignement texte", type: "select", options: ["left", "center", "right"] },
   { key: "enabled", label: "Publié", type: "checkbox" },
   { key: "display_order", label: "Ordre", type: "number" },
   { key: "answer", label: "Réponse", type: "textarea" },
@@ -883,6 +893,7 @@ const TESTIMONIAL_FIELDS = [
   { key: "role_label", label: "Rôle ou lien avec le club" },
   { key: "image_url", label: "Photo", type: "image" },
   { key: "image_fit", label: "Comportement image", type: "select", options: ["cover", "contain"] },
+  { key: "text_align", label: "Alignement texte", type: "select", options: ["left", "center", "right"] },
   { key: "enabled", label: "Publié", type: "checkbox" },
   { key: "display_order", label: "Ordre", type: "number" },
   { key: "quote", label: "Avis", type: "textarea" },
@@ -947,6 +958,7 @@ const PRICING_FIELDS = [
   { key: "title", label: "Titre" },
   { key: "price_label", label: "Prix affiché" },
   { key: "badge", label: "Badge" },
+  { key: "text_align", label: "Alignement texte", type: "select", options: ["left", "center", "right"] },
   { key: "enabled", label: "Visible sur le site", type: "checkbox" },
   { key: "display_order", label: "Ordre", type: "number" },
   { key: "description", label: "Texte associé", type: "textarea" },
@@ -1256,21 +1268,21 @@ function buildNewItem(kind) {
 
   const defaults = {
     sections: { id, section_key: "new_section", title: "Nouvelle section", subtitle: "", enabled: 0, display_order: order },
-    schedule: { id, day_label: "Jour", time_label: "Horaire", note: "", display_order: order },
-    team: { id, full_name: "Nouveau membre", role_label: "Rôle", belt_label: "", bio: "", image_url: "", display_order: order },
-    news: { id, title: "Nouvelle actualité", body: "", date_label: "", badge: "", cta_label: "", cta_href: "", image_url: "", image_fit: "cover", enabled: 1, display_order: order },
-    highlights: { id, title: "Nouvel encart", body: "", badge: "", cta_label: "", cta_href: "", display_order: order },
-    gallery: { id, title: "Nouvelle image", image_url: "", alt_text: "", display_order: order },
+    schedule: { id, day_label: "Jour", time_label: "Horaire", note: "", text_align: "left", display_order: order },
+    team: { id, full_name: "Nouveau membre", role_label: "Rôle", belt_label: "", bio: "", image_url: "", text_align: "left", display_order: order },
+    news: { id, title: "Nouvelle actualité", body: "", date_label: "", badge: "", cta_label: "", cta_href: "", image_url: "", image_fit: "cover", text_align: "left", enabled: 1, display_order: order },
+    highlights: { id, title: "Nouvel encart", body: "", badge: "", cta_label: "", cta_href: "", text_align: "left", display_order: order },
+    gallery: { id, title: "Nouvelle image", image_url: "", alt_text: "", text_align: "left", display_order: order },
     media: { id, title: "Nouveau média", image_url: "", alt_text: "", display_order: order },
     links: { id, title: "Nouveau lien", href: "https://", cta_label: "Accéder", description: "", display_order: order },
     buttons: { id, label: "Nouveau bouton", href: "https://", placement: "hero", style: "red", enabled: 1, display_order: order },
-    blocks: { id, title: "Nouveau bloc", body: "", image_url: "", image_fit: "cover", cta_label: "Ouvrir", cta_href: "", width_percent: 100, height_px: 360, enabled: 1, display_order: order },
-    resources: { id, title: "Nouvelle ressource", cta_label: "Ouvrir", cta_href: "https://", description: "", image_url: "", image_fit: "contain", enabled: 1, display_order: order },
-    equipment: { id, title: "Nouvel équipement", cta_label: "Voir", cta_href: "https://", description: "", image_url: "", image_fit: "cover", enabled: 1, display_order: order },
-    sponsors: { id, name: "Nouveau sponsor", description: "", website_url: "https://", cta_label: "Voir le site", logo_url: "", image_fit: "contain", featured: 0, enabled: 1, display_order: order },
-    faq: { id, question: "Nouvelle question", answer: "", enabled: 1, display_order: order },
-    testimonials: { id, author_name: "Nouvel avis", role_label: "", quote: "", image_url: "", image_fit: "cover", enabled: 1, display_order: order },
-    pricing: { id, title: "Nouveau tarif", price_label: "", description: "", badge: "", enabled: 1, display_order: order },
+    blocks: { id, title: "Nouveau bloc", body: "", image_url: "", image_fit: "cover", cta_label: "Ouvrir", cta_href: "", width_percent: 100, height_px: 360, text_align: "left", enabled: 1, display_order: order },
+    resources: { id, title: "Nouvelle ressource", cta_label: "Ouvrir", cta_href: "https://", description: "", image_url: "", image_fit: "contain", text_align: "left", enabled: 1, display_order: order },
+    equipment: { id, title: "Nouvel équipement", cta_label: "Voir", cta_href: "https://", description: "", image_url: "", image_fit: "cover", text_align: "left", enabled: 1, display_order: order },
+    sponsors: { id, name: "Nouveau sponsor", description: "", website_url: "https://", cta_label: "Voir le site", logo_url: "", image_fit: "contain", featured: 0, text_align: "left", enabled: 1, display_order: order },
+    faq: { id, question: "Nouvelle question", answer: "", text_align: "left", enabled: 1, display_order: order },
+    testimonials: { id, author_name: "Nouvel avis", role_label: "", quote: "", image_url: "", image_fit: "cover", text_align: "left", enabled: 1, display_order: order },
+    pricing: { id, title: "Nouveau tarif", price_label: "", description: "", badge: "", text_align: "left", enabled: 1, display_order: order },
   };
   return defaults[kind] || null;
 }

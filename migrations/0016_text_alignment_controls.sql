@@ -1,0 +1,12 @@
+ALTER TABLE schedule_slots ADD COLUMN text_align TEXT NOT NULL DEFAULT 'left';
+ALTER TABLE team_members ADD COLUMN text_align TEXT NOT NULL DEFAULT 'left';
+ALTER TABLE highlights ADD COLUMN text_align TEXT NOT NULL DEFAULT 'left';
+ALTER TABLE gallery_items ADD COLUMN text_align TEXT NOT NULL DEFAULT 'left';
+ALTER TABLE custom_blocks ADD COLUMN text_align TEXT NOT NULL DEFAULT 'left';
+ALTER TABLE resource_cards ADD COLUMN text_align TEXT NOT NULL DEFAULT 'left';
+ALTER TABLE equipment_items ADD COLUMN text_align TEXT NOT NULL DEFAULT 'left';
+ALTER TABLE sponsor_partners ADD COLUMN text_align TEXT NOT NULL DEFAULT 'left';
+ALTER TABLE news_items ADD COLUMN text_align TEXT NOT NULL DEFAULT 'left';
+ALTER TABLE faq_items ADD COLUMN text_align TEXT NOT NULL DEFAULT 'left';
+ALTER TABLE testimonials ADD COLUMN text_align TEXT NOT NULL DEFAULT 'left';
+ALTER TABLE pricing_plans ADD COLUMN text_align TEXT NOT NULL DEFAULT 'left';
