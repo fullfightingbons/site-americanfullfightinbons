@@ -12,6 +12,7 @@ interface Env {
   SESSION_SECRET?: string;
   HELLOASSO_CLIENT_ID?: string;
   HELLOASSO_CLIENT_SECRET?: string;
+  GOOGLE_PLACES_API_KEY?: string;
   SITE_PUBLIC_URL?: string;
   /** Set to "dev" in wrangler.json vars to disable the Secure cookie flag locally */
   ENV?: string;
@@ -29,6 +30,8 @@ const MAX_PBKDF2_ITERATIONS = 100000;
 const loginAttempts = new Map<string, { count: number; resetAt: number }>();
 const LOGIN_MAX_ATTEMPTS = 10;
 const LOGIN_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+const GOOGLE_REVIEWS_CACHE_TTL_MS = 30 * 60 * 1000;
+const googleReviewsCache = new Map<string, { expiresAt: number; data: Row[] }>();
 
 function checkLoginRateLimit(ip: string): boolean {
   const now = Date.now();
@@ -441,6 +444,12 @@ function publicResponseSettings(settings: Record<string, string>, env: Env): Rec
     news_intro: settings.news_intro || "Les informations récentes du club restent visibles ici.",
     faq_intro: settings.faq_intro || "Les réponses aux questions les plus fréquentes avant de rejoindre le club.",
     testimonials_intro: settings.testimonials_intro || "Quelques retours de pratiquants et proches du club.",
+    google_reviews_enabled: settings.google_reviews_enabled || "1",
+    google_place_id: settings.google_place_id || "",
+    google_place_query: settings.google_place_query || "American Full Fighting Bons en Chablais",
+    google_reviews_min_rating: settings.google_reviews_min_rating || "4",
+    google_reviews_cta_label: settings.google_reviews_cta_label || "Voir les avis Google",
+    google_reviews_cta_href: settings.google_reviews_cta_href || "",
     schedule_intro:
       settings.schedule_intro ||
       "Des créneaux réguliers pour installer de bons repères techniques et physiques tout au long de la semaine.",
@@ -663,9 +672,79 @@ async function getHelloAssoCheckoutIntent(
   return payload;
 }
 
+function normalizeGoogleReview(review: Row, index: number, minRating: number): Row | null {
+  const author = (review.authorAttribution || {}) as Row;
+  const text = (review.text || review.originalText || {}) as Row;
+  const rating = Number(review.rating || 0);
+  const quote = sanitizeText(text.text || "", 600);
+  if (!quote || rating < minRating) return null;
+  return {
+    id: sanitizeText(review.name || `google-review-${index + 1}`, 160),
+    author_name: sanitizeText(author.displayName || "Avis Google", 120),
+    role_label: `Google · ${"★".repeat(Math.max(1, Math.min(5, Math.round(rating))))}`,
+    quote,
+    image_url: sanitizeUrl(author.photoUri || "", 500),
+    image_fit: "cover",
+    enabled: 1,
+    display_order: index + 1,
+    rating,
+    source: "google",
+    published_at: sanitizeText(review.publishTime || "", 80),
+    relative_time: sanitizeText(review.relativePublishTimeDescription || "", 120),
+  };
+}
+
+async function findGooglePlaceId(apiKey: string, query: string): Promise<string> {
+  const response = await fetch("https://places.googleapis.com/v1/places:searchText", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "X-Goog-Api-Key": apiKey,
+      "X-Goog-FieldMask": "places.id",
+    },
+    body: JSON.stringify({ textQuery: query, languageCode: "fr", regionCode: "FR" }),
+  });
+  if (!response.ok) return "";
+  const payload = (await response.json().catch(() => ({}))) as Row;
+  const places = Array.isArray(payload.places) ? (payload.places as Row[]) : [];
+  return sanitizeText(places[0]?.id, 160);
+}
+
+async function readGoogleReviews(settings: Record<string, string>, env: Env): Promise<Row[]> {
+  if (!parseBooleanSetting(settings.google_reviews_enabled)) return [];
+  const apiKey = sanitizeText(env.GOOGLE_PLACES_API_KEY, 260);
+  if (!apiKey) return [];
+
+  let placeId = sanitizeText(settings.google_place_id, 180);
+  const query = sanitizeText(settings.google_place_query, 220);
+  const minRating = Math.max(1, Math.min(5, Number(settings.google_reviews_min_rating) || 4));
+  const cacheKey = `${placeId || query}:${minRating}`;
+  const cached = googleReviewsCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) return cached.data;
+
+  if (!placeId && query) placeId = await findGooglePlaceId(apiKey, query);
+  if (!placeId) return [];
+
+  const response = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}?languageCode=fr&regionCode=FR`, {
+    headers: {
+      "X-Goog-Api-Key": apiKey,
+      "X-Goog-FieldMask": "id,displayName,googleMapsUri,rating,userRatingCount,reviews",
+    },
+  });
+  if (!response.ok) return [];
+  const payload = (await response.json().catch(() => ({}))) as Row;
+  const reviews = Array.isArray(payload.reviews) ? (payload.reviews as Row[]) : [];
+  const normalized = reviews
+    .map((review, index) => normalizeGoogleReview(review, index, minRating))
+    .filter((review): review is Row => !!review);
+
+  googleReviewsCache.set(cacheKey, { expiresAt: Date.now() + GOOGLE_REVIEWS_CACHE_TTL_MS, data: normalized });
+  return normalized;
+}
+
 async function getBootstrap(env: Env): Promise<Row> {
   const settings = publicResponseSettings(await readSettingsMap(env.DB), env);
-  const [sections, schedule, team, highlights, gallery, links, customButtons, customBlocks, resources, equipment, sponsors, news, faq, testimonials, media, fallbackPricing, sharedPricing] = await Promise.all([
+  const [sections, schedule, team, highlights, gallery, links, customButtons, customBlocks, resources, equipment, sponsors, news, faq, manualTestimonials, media, fallbackPricing, sharedPricing] = await Promise.all([
     readTable(env.DB, "SELECT * FROM landing_sections ORDER BY display_order, id"),
     readTable(env.DB, "SELECT * FROM schedule_slots ORDER BY display_order, id"),
     readTable(env.DB, "SELECT * FROM team_members ORDER BY display_order, id"),
@@ -684,6 +763,8 @@ async function getBootstrap(env: Env): Promise<Row> {
     readTable(env.DB, "SELECT * FROM pricing_plans ORDER BY display_order, id"),
     readSharedPricing(env),
   ]);
+  const googleTestimonials = await readGoogleReviews(settings, env).catch(() => []);
+  const testimonials = googleTestimonials.length ? googleTestimonials : manualTestimonials;
   return {
     sitePublicUrl: settings.site_public_url,
     site: {
@@ -794,6 +875,16 @@ async function getBootstrap(env: Env): Promise<Row> {
     newsIntro: settings.news_intro,
     faqIntro: settings.faq_intro,
     testimonialsIntro: settings.testimonials_intro,
+    googleReviews: {
+      enabled: parseBooleanSetting(settings.google_reviews_enabled),
+      configured: !!sanitizeText(env.GOOGLE_PLACES_API_KEY, 260),
+      source: googleTestimonials.length ? "google" : "manual",
+      placeId: settings.google_place_id,
+      query: settings.google_place_query,
+      minRating: settings.google_reviews_min_rating,
+      ctaLabel: settings.google_reviews_cta_label,
+      ctaHref: settings.google_reviews_cta_href,
+    },
     scheduleIntro: settings.schedule_intro,
     teamIntro: settings.team_intro,
     pricingIntroSynced: settings.pricing_intro_synced,

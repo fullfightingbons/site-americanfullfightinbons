@@ -738,6 +738,21 @@ img{display:block;max-width:100%}
   margin-top:0;
   font-size:1.02rem;
 }
+.testimonial-source{
+  margin-top:.65rem;
+  color:var(--muted);
+  font-size:.78rem;
+}
+.section-actions{
+  display:flex;
+  justify-content:center;
+  margin-top:1.4rem;
+}
+.section-actions .btn-dark{
+  color:var(--ink);
+  background:transparent;
+  border:1px solid var(--line-strong);
+}
 .custom-block-grid{
   display:flex;
   flex-wrap:wrap;

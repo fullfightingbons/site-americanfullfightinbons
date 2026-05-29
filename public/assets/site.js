@@ -478,9 +478,15 @@ function renderTestimonialsSection(data, section) {
             <p class="quote">“${escapeHtml(item.quote || "")}”</p>
             <h3>${escapeHtml(item.author_name)}</h3>
             <div class="meta">${escapeHtml(item.role_label || "")}</div>
+            ${item.source === "google" && item.relative_time ? `<div class="testimonial-source">${escapeHtml(item.relative_time)}</div>` : ""}
           </article>
         `).join("")}
       </div>
+      ${data.googleReviews?.source === "google" && data.googleReviews?.ctaHref ? `
+        <div class="section-actions">
+          <a class="btn btn-dark" href="${escapeHtml(data.googleReviews.ctaHref)}" target="_blank" rel="noreferrer">${escapeHtml(data.googleReviews.ctaLabel || "Voir les avis Google")}</a>
+        </div>
+      ` : ""}
     </section>
   `;
 }
