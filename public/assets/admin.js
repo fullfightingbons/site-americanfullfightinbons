@@ -165,6 +165,9 @@ const SETTINGS_GROUPS = [
       ["resources_intro", "Intro ressources"],
       ["equipment_intro", "Intro équipement"],
       ["sponsors_intro", "Intro sponsors"],
+      ["news_intro", "Intro actualités"],
+      ["faq_intro", "Intro FAQ"],
+      ["testimonials_intro", "Intro avis"],
       ["sponsor_intro", "Intro mécénat"],
       ["contact_intro", "Intro contact"],
     ],
@@ -231,11 +234,14 @@ const SECTION_KEYS = [
   { key: "schedule", label: "Planning", icon: "⏱" },
   { key: "team", label: "Équipe", icon: "👥" },
   { key: "pricing", label: "Tarifs", icon: "€" },
+  { key: "news", label: "Actualités", icon: "●" },
   { key: "highlights", label: "Temps forts", icon: "◈" },
   { key: "gallery", label: "Galerie", icon: "⬚" },
   { key: "resources", label: "Ressources", icon: "📂" },
   { key: "equipment", label: "Équipement", icon: "🥊" },
   { key: "sponsors", label: "Sponsors", icon: "★" },
+  { key: "faq", label: "FAQ", icon: "?" },
+  { key: "testimonials", label: "Avis", icon: "”" },
   { key: "sponsor", label: "Mécénat", icon: "♦" },
   { key: "custom", label: "Blocs libres", icon: "▦" },
   { key: "contact", label: "Contact", icon: "✉" },
@@ -692,6 +698,10 @@ function renderEntityCard(kind, item, fields) {
       <div class="vb-entity-card-head">
         <div class="vb-entity-card-title">${escapeHtml(titleField)}</div>
         <div class="vb-entity-card-actions">
+          ${sectionAnchorForKind(kind) ? `<button class="vb-card-btn" type="button"
+            data-view-kind="${escapeHtml(kind)}">↗ Voir</button>` : ""}
+          <button class="vb-card-btn" type="button"
+            data-duplicate-kind="${escapeHtml(kind)}" data-duplicate-id="${escapeHtml(item.id)}">Dupliquer</button>
           <button class="vb-card-btn vb-card-btn--edit" type="button"
             data-edit-kind="${escapeHtml(kind)}" data-edit-id="${escapeHtml(item.id)}">✎ Modifier</button>
           <button class="vb-card-btn vb-card-btn--delete" type="button"
@@ -763,6 +773,7 @@ const BUTTON_FIELDS = [
 const BLOCK_FIELDS = [
   { key: "title", label: "Titre" },
   { key: "image_url", label: "Illustration", type: "image" },
+  { key: "image_fit", label: "Comportement image", type: "select", options: ["cover", "contain"] },
   { key: "cta_label", label: "Texte bouton" },
   { key: "cta_href", label: "Lien bouton" },
   { key: "width_percent", label: "Largeur (%)", type: "number" },
@@ -779,6 +790,8 @@ const RESOURCES_FIELDS = [
   { key: "display_order", label: "Ordre", type: "number" },
   { key: "description", label: "Description", type: "textarea" },
   { key: "image_url", label: "Image", type: "image" },
+  { key: "image_fit", label: "Comportement image", type: "select", options: ["contain", "cover"] },
+  { key: "enabled", label: "Publié", type: "checkbox" },
 ];
 
 const EQUIPMENT_FIELDS = [
@@ -788,15 +801,57 @@ const EQUIPMENT_FIELDS = [
   { key: "display_order", label: "Ordre", type: "number" },
   { key: "description", label: "Description", type: "textarea" },
   { key: "image_url", label: "Photo", type: "image" },
+  { key: "image_fit", label: "Comportement image", type: "select", options: ["cover", "contain"] },
+  { key: "enabled", label: "Publié", type: "checkbox" },
 ];
 
 const SPONSOR_PARTNER_FIELDS = [
   { key: "name", label: "Nom du sponsor" },
   { key: "website_url", label: "Lien site web" },
+  { key: "cta_label", label: "Texte bouton" },
   { key: "logo_url", label: "Logo ou photo", type: "image" },
+  { key: "image_fit", label: "Comportement image", type: "select", options: ["contain", "cover"] },
+  { key: "featured", label: "Sponsor principal", type: "checkbox" },
   { key: "enabled", label: "Publié", type: "checkbox" },
   { key: "display_order", label: "Ordre", type: "number" },
   { key: "description", label: "Texte associé", type: "textarea" },
+];
+
+const NEWS_FIELDS = [
+  { key: "title", label: "Titre" },
+  { key: "date_label", label: "Date" },
+  { key: "badge", label: "Badge" },
+  { key: "cta_label", label: "Texte bouton" },
+  { key: "cta_href", label: "Lien bouton" },
+  { key: "image_url", label: "Image", type: "image" },
+  { key: "image_fit", label: "Comportement image", type: "select", options: ["cover", "contain"] },
+  { key: "enabled", label: "Publié", type: "checkbox" },
+  { key: "display_order", label: "Ordre", type: "number" },
+  { key: "body", label: "Texte", type: "textarea" },
+];
+
+const FAQ_FIELDS = [
+  { key: "question", label: "Question" },
+  { key: "enabled", label: "Publié", type: "checkbox" },
+  { key: "display_order", label: "Ordre", type: "number" },
+  { key: "answer", label: "Réponse", type: "textarea" },
+];
+
+const TESTIMONIAL_FIELDS = [
+  { key: "author_name", label: "Nom" },
+  { key: "role_label", label: "Rôle ou lien avec le club" },
+  { key: "image_url", label: "Photo", type: "image" },
+  { key: "image_fit", label: "Comportement image", type: "select", options: ["cover", "contain"] },
+  { key: "enabled", label: "Publié", type: "checkbox" },
+  { key: "display_order", label: "Ordre", type: "number" },
+  { key: "quote", label: "Avis", type: "textarea" },
+];
+
+const MEDIA_FIELDS = [
+  { key: "title", label: "Titre" },
+  { key: "image_url", label: "Image", type: "image" },
+  { key: "alt_text", label: "Texte alternatif", type: "textarea" },
+  { key: "display_order", label: "Ordre", type: "number" },
 ];
 
 const SECTION_TEXT_FIELDS = [
@@ -942,14 +997,18 @@ function renderAll() {
   renderSectionsTextPanel();
   renderEntityPanel("schedule", "schedule", state.schedule || [], SCHEDULE_FIELDS, "Ajouter un créneau");
   renderEntityPanel("team", "team", state.team || [], TEAM_FIELDS, "Ajouter un membre");
+  renderEntityPanel("news", "news", state.news || [], NEWS_FIELDS, "Ajouter une actualité");
   renderEntityPanel("highlights", "highlights", state.highlights || [], HIGHLIGHTS_FIELDS, "Ajouter un temps fort");
   renderEntityPanel("gallery", "gallery", state.gallery || [], GALLERY_FIELDS, "Ajouter une image");
+  renderEntityPanel("media", "media", state.media || [], MEDIA_FIELDS, "Ajouter un média");
   renderEntityPanel("links", "links", state.links || [], LINKS_FIELDS, "Ajouter un lien");
   renderEntityPanel("buttons", "buttons", state.customButtons || [], BUTTON_FIELDS, "Ajouter un bouton");
   renderEntityPanel("blocks", "blocks", state.customBlocks || [], BLOCK_FIELDS, "Ajouter un bloc");
   renderEntityPanel("resources", "resources", state.resources || [], RESOURCES_FIELDS, "Ajouter une ressource");
   renderEntityPanel("equipment", "equipment", state.equipment || [], EQUIPMENT_FIELDS, "Ajouter un équipement");
   renderEntityPanel("sponsors", "sponsors", state.sponsors || [], SPONSOR_PARTNER_FIELDS, "Ajouter un sponsor");
+  renderEntityPanel("faq", "faq", state.faq || [], FAQ_FIELDS, "Ajouter une question");
+  renderEntityPanel("testimonials", "testimonials", state.testimonials || [], TESTIMONIAL_FIELDS, "Ajouter un avis");
 
   renderMessagesPanel();
   renderPricingPanel();
@@ -1054,6 +1113,9 @@ async function loadAdmin() {
     resources_intro: state.resourcesIntro,
     equipment_intro: state.equipmentIntro,
     sponsors_intro: state.sponsorsIntro,
+    news_intro: state.newsIntro,
+    faq_intro: state.faqIntro,
+    testimonials_intro: state.testimonialsIntro,
     sponsor_intro: state.sponsor?.intro,
     sponsor_title: state.sponsor?.title,
     sponsor_body: state.sponsor?.body,
@@ -1106,12 +1168,16 @@ function kindConfig(kind) {
     team: { table: "team_members", items: state?.team },
     highlights: { table: "highlights", items: state?.highlights },
     gallery: { table: "gallery_items", items: state?.gallery },
+    media: { table: "media_assets", items: state?.media },
     links: { table: "partner_links", items: state?.links },
     buttons: { table: "custom_buttons", items: state?.customButtons },
     blocks: { table: "custom_blocks", items: state?.customBlocks },
     resources: { table: "resource_cards", items: state?.resources },
     equipment: { table: "equipment_items", items: state?.equipment },
     sponsors: { table: "sponsor_partners", items: state?.sponsors },
+    news: { table: "news_items", items: state?.news },
+    faq: { table: "faq_items", items: state?.faq },
+    testimonials: { table: "testimonials", items: state?.testimonials },
     pricing: { table: "pricing_plans", items: state?.pricing },
   };
   return map[kind];
@@ -1125,14 +1191,18 @@ function buildNewItem(kind) {
     sections: (state?.sections || []).length,
     schedule: (state?.schedule || []).length,
     team: (state?.team || []).length,
+    news: (state?.news || []).length,
     highlights: (state?.highlights || []).length,
     gallery: (state?.gallery || []).length,
+    media: (state?.media || []).length,
     links: (state?.links || []).length,
     buttons: (state?.customButtons || []).length,
     blocks: (state?.customBlocks || []).length,
     resources: (state?.resources || []).length,
     equipment: (state?.equipment || []).length,
     sponsors: (state?.sponsors || []).length,
+    faq: (state?.faq || []).length,
+    testimonials: (state?.testimonials || []).length,
     pricing: (state?.pricing || []).length,
   };
   const order = (counts[kind] || 0) + 1;
@@ -1141,17 +1211,65 @@ function buildNewItem(kind) {
     sections: { id, section_key: "new_section", title: "Nouvelle section", subtitle: "", enabled: 0, display_order: order },
     schedule: { id, day_label: "Jour", time_label: "Horaire", note: "", display_order: order },
     team: { id, full_name: "Nouveau membre", role_label: "Rôle", belt_label: "", bio: "", image_url: "", display_order: order },
+    news: { id, title: "Nouvelle actualité", body: "", date_label: "", badge: "", cta_label: "", cta_href: "", image_url: "", image_fit: "cover", enabled: 1, display_order: order },
     highlights: { id, title: "Nouvel encart", body: "", badge: "", cta_label: "", cta_href: "", display_order: order },
     gallery: { id, title: "Nouvelle image", image_url: "", alt_text: "", display_order: order },
+    media: { id, title: "Nouveau média", image_url: "", alt_text: "", display_order: order },
     links: { id, title: "Nouveau lien", href: "https://", cta_label: "Accéder", description: "", display_order: order },
     buttons: { id, label: "Nouveau bouton", href: "https://", placement: "hero", style: "red", enabled: 1, display_order: order },
-    blocks: { id, title: "Nouveau bloc", body: "", image_url: "", cta_label: "Ouvrir", cta_href: "", width_percent: 100, height_px: 360, enabled: 1, display_order: order },
-    resources: { id, title: "Nouvelle ressource", cta_label: "Ouvrir", cta_href: "https://", description: "", image_url: "", display_order: order },
-    equipment: { id, title: "Nouvel équipement", cta_label: "Voir", cta_href: "https://", description: "", image_url: "", display_order: order },
-    sponsors: { id, name: "Nouveau sponsor", description: "", website_url: "https://", logo_url: "", enabled: 1, display_order: order },
+    blocks: { id, title: "Nouveau bloc", body: "", image_url: "", image_fit: "cover", cta_label: "Ouvrir", cta_href: "", width_percent: 100, height_px: 360, enabled: 1, display_order: order },
+    resources: { id, title: "Nouvelle ressource", cta_label: "Ouvrir", cta_href: "https://", description: "", image_url: "", image_fit: "contain", enabled: 1, display_order: order },
+    equipment: { id, title: "Nouvel équipement", cta_label: "Voir", cta_href: "https://", description: "", image_url: "", image_fit: "cover", enabled: 1, display_order: order },
+    sponsors: { id, name: "Nouveau sponsor", description: "", website_url: "https://", cta_label: "Voir le site", logo_url: "", image_fit: "contain", featured: 0, enabled: 1, display_order: order },
+    faq: { id, question: "Nouvelle question", answer: "", enabled: 1, display_order: order },
+    testimonials: { id, author_name: "Nouvel avis", role_label: "", quote: "", image_url: "", image_fit: "cover", enabled: 1, display_order: order },
     pricing: { id, title: "Nouveau tarif", price_label: "", description: "", badge: "", enabled: 1, display_order: order },
   };
   return defaults[kind] || null;
+}
+
+function sectionAnchorForKind(kind) {
+  const map = {
+    schedule: "planning",
+    team: "equipe",
+    pricing: "tarifs",
+    news: "actualites",
+    highlights: "temps-forts",
+    gallery: "galerie",
+    media: "medias",
+    links: "liens",
+    buttons: "",
+    blocks: "blocs",
+    resources: "ressources",
+    equipment: "equipement",
+    sponsors: "sponsors",
+    faq: "faq",
+    testimonials: "avis",
+    contact: "contact",
+  };
+  return map[kind] || "";
+}
+
+function openPublicSection(kind) {
+  const anchor = sectionAnchorForKind(kind);
+  const url = new URL(window.location.origin);
+  if (anchor) url.hash = anchor;
+  window.open(url.toString(), "_blank", "noopener,noreferrer");
+}
+
+async function duplicateItem(kind, id) {
+  const config = kindConfig(kind);
+  const source = (config?.items || []).find((item) => String(item.id) === String(id));
+  if (!source) return;
+  const copy = { ...source, id: crypto.randomUUID(), display_order: (config.items || []).length + 1 };
+  if (copy.title) copy.title = `${copy.title} (copie)`;
+  if (copy.name) copy.name = `${copy.name} (copie)`;
+  if (copy.question) copy.question = `${copy.question} (copie)`;
+  if (copy.author_name) copy.author_name = `${copy.author_name} (copie)`;
+  await api("/api/admin/content", {
+    method: "POST",
+    body: JSON.stringify({ table: config.table, action: "upsert", values: copy }),
+  });
 }
 
 // ─── Swap order ───────────────────────────────────────────────
@@ -1204,6 +1322,22 @@ document.addEventListener("click", async (event) => {
   }
 
   if (!button) return;
+
+  if (button.dataset.viewKind) {
+    openPublicSection(button.dataset.viewKind);
+    return;
+  }
+
+  if (button.dataset.duplicateKind && button.dataset.duplicateId) {
+    try {
+      await duplicateItem(button.dataset.duplicateKind, button.dataset.duplicateId);
+      await loadAdmin();
+      showStatus("Élément dupliqué.", false);
+    } catch (err) {
+      showStatus(err.message || "Erreur");
+    }
+    return;
+  }
 
   // ── Section toggle (checkbox)
   const toggle = target.closest("[data-section-toggle]");
@@ -1361,12 +1495,16 @@ document.addEventListener("click", async (event) => {
       schedule: SCHEDULE_FIELDS,
       sections: SECTION_TEXT_FIELDS,
       team: TEAM_FIELDS,
+      news: NEWS_FIELDS,
       highlights: HIGHLIGHTS_FIELDS,
       gallery: GALLERY_FIELDS,
+      media: MEDIA_FIELDS,
       links: LINKS_FIELDS,
       resources: RESOURCES_FIELDS,
       equipment: EQUIPMENT_FIELDS,
       sponsors: SPONSOR_PARTNER_FIELDS,
+      faq: FAQ_FIELDS,
+      testimonials: TESTIMONIAL_FIELDS,
       buttons: BUTTON_FIELDS,
       blocks: BLOCK_FIELDS,
       pricing: PRICING_FIELDS,

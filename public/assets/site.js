@@ -218,7 +218,7 @@ function renderStorySection(data, section) {
 
 function renderSpotlightSection(data, section) {
   return `
-    <section class="section-shell">
+    <section id="a-la-une" class="section-shell">
       <div class="section-head">
         <div>
           <div class="section-tag">${escapeHtml(section.title || "À la une")}</div>
@@ -270,7 +270,7 @@ function renderScheduleSection(data, section) {
 
 function renderTeamSection(data, section) {
   return `
-    <section class="section-shell">
+    <section id="equipe" class="section-shell">
       <div class="section-head">
         <div>
           <div class="section-tag">${escapeHtml(section.title || "Équipe")}</div>
@@ -331,7 +331,7 @@ function renderPricingSection(data, section) {
 
 function renderHighlightsSection(data, section) {
   return `
-    <section class="section-shell">
+    <section id="temps-forts" class="section-shell">
       <div class="section-head">
         <div>
           <div class="section-tag">${escapeHtml(section.title || "Temps forts")}</div>
@@ -360,7 +360,7 @@ function renderHighlightsSection(data, section) {
 function renderGallerySection(data, section) {
   const items = data.gallery || [];
   return `
-    <section class="section-shell">
+    <section id="galerie" class="section-shell">
       <div class="section-head">
         <div>
           <div class="section-tag">${escapeHtml(section.title || "Galerie")}</div>
@@ -401,9 +401,93 @@ function renderGallerySection(data, section) {
   `;
 }
 
+function imageFitClass(value, fallback = "cover") {
+  return String(value || fallback) === "contain" ? "is-contain" : "is-cover";
+}
+
+function renderNewsSection(data, section) {
+  const news = (data.news || [])
+    .filter((item) => Number(item.enabled ?? 1) === 1)
+    .sort((a, b) => Number(a.display_order) - Number(b.display_order));
+  return `
+    <section id="actualites" class="section-shell">
+      <div class="section-head">
+        <div>
+          <div class="section-tag">${escapeHtml(section.title || "Actualités")}</div>
+          <h2>${escapeHtml(section.subtitle || "Les nouvelles du club")}</h2>
+        </div>
+        <p>${escapeHtml(data.newsIntro || "Les informations récentes du club restent visibles ici.")}</p>
+      </div>
+      <div class="news-grid">
+        ${news.map((item) => `
+          <article class="news-card">
+            ${item.image_url ? `<img class="card-media ${imageFitClass(item.image_fit)}" src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.title)}" loading="lazy">` : ""}
+            <div class="meta">${escapeHtml(item.badge || item.date_label || "")}</div>
+            <h3>${escapeHtml(item.title)}</h3>
+            <p>${escapeHtml(item.body || "")}</p>
+            ${item.cta_href ? `<a class="cta" href="${escapeHtml(item.cta_href)}">${escapeHtml(item.cta_label || "Ouvrir")}</a>` : ""}
+          </article>
+        `).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderFaqSection(data, section) {
+  const items = (data.faq || [])
+    .filter((item) => Number(item.enabled ?? 1) === 1)
+    .sort((a, b) => Number(a.display_order) - Number(b.display_order));
+  return `
+    <section id="faq" class="section-shell">
+      <div class="section-head">
+        <div>
+          <div class="section-tag">${escapeHtml(section.title || "FAQ")}</div>
+          <h2>${escapeHtml(section.subtitle || "Questions fréquentes")}</h2>
+        </div>
+        <p>${escapeHtml(data.faqIntro || "Les réponses aux questions les plus courantes avant de venir au club.")}</p>
+      </div>
+      <div class="faq-grid">
+        ${items.map((item, index) => `
+          <details class="faq-card"${index === 0 ? " open" : ""}>
+            <summary>${escapeHtml(item.question)}</summary>
+            <p>${escapeHtml(item.answer || "")}</p>
+          </details>
+        `).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderTestimonialsSection(data, section) {
+  const items = (data.testimonials || [])
+    .filter((item) => Number(item.enabled ?? 1) === 1)
+    .sort((a, b) => Number(a.display_order) - Number(b.display_order));
+  return `
+    <section id="avis" class="section-shell">
+      <div class="section-head">
+        <div>
+          <div class="section-tag">${escapeHtml(section.title || "Avis")}</div>
+          <h2>${escapeHtml(section.subtitle || "Ils parlent du club")}</h2>
+        </div>
+        <p>${escapeHtml(data.testimonialsIntro || "Quelques retours de pratiquants et proches du club.")}</p>
+      </div>
+      <div class="testimonials-grid">
+        ${items.map((item) => `
+          <article class="testimonial-card">
+            ${item.image_url ? `<img class="testimonial-photo ${imageFitClass(item.image_fit)}" src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.author_name)}" loading="lazy">` : ""}
+            <p class="quote">“${escapeHtml(item.quote || "")}”</p>
+            <h3>${escapeHtml(item.author_name)}</h3>
+            <div class="meta">${escapeHtml(item.role_label || "")}</div>
+          </article>
+        `).join("")}
+      </div>
+    </section>
+  `;
+}
+
 function renderResourcesSection(data, section) {
   return `
-    <section class="section-shell">
+    <section id="ressources" class="section-shell">
       <div class="section-head">
         <div>
           <div class="section-tag">${escapeHtml(section.title || "Membre actif")}</div>
@@ -413,10 +497,11 @@ function renderResourcesSection(data, section) {
       </div>
       <div class="resource-grid">
         ${(data.resources || [])
+          .filter((item) => Number(item.enabled ?? 1) === 1)
           .map(
             (item) => `
           <article class="resource-card">
-            ${item.image_url ? `<img class="card-contained-image" src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.title)}" loading="lazy">` : ""}
+            ${item.image_url ? `<img class="card-media ${imageFitClass(item.image_fit, "contain")}" src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.title)}" loading="lazy">` : ""}
             <h3>${escapeHtml(item.title)}</h3>
             <p>${escapeHtml(item.description)}</p>
             ${item.cta_href ? `<a class="cta" href="${escapeHtml(item.cta_href)}">${escapeHtml(item.cta_label || "Ouvrir")}</a>` : ""}
@@ -431,7 +516,7 @@ function renderResourcesSection(data, section) {
 
 function renderEquipmentSection(data, section) {
   return `
-    <section class="section-shell">
+    <section id="equipement" class="section-shell">
       <div class="section-head">
         <div>
           <div class="section-tag">${escapeHtml(section.title || "Équipement")}</div>
@@ -441,10 +526,11 @@ function renderEquipmentSection(data, section) {
       </div>
       <div class="equipment-grid">
         ${(data.equipment || [])
+          .filter((item) => Number(item.enabled ?? 1) === 1)
           .map(
             (item) => `
           <article class="equipment-card">
-            ${item.image_url ? `<img class="equipment-photo" src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.title)}" loading="lazy">` : ""}
+            ${item.image_url ? `<img class="card-media ${imageFitClass(item.image_fit, "cover")}" src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.title)}" loading="lazy">` : ""}
             <h3>${escapeHtml(item.title)}</h3>
             <p>${escapeHtml(item.description)}</p>
             ${item.cta_href ? `<a class="cta" href="${escapeHtml(item.cta_href)}">${escapeHtml(item.cta_label || "Ouvrir")}</a>` : ""}
@@ -462,7 +548,7 @@ function renderSponsorsSection(data, section) {
     .filter((item) => Number(item.enabled ?? 1) === 1)
     .sort((a, b) => Number(a.display_order) - Number(b.display_order));
   return `
-    <section class="section-shell">
+    <section id="sponsors" class="section-shell">
       <div class="section-head">
         <div>
           <div class="section-tag">${escapeHtml(section.title || "Sponsors")}</div>
@@ -474,11 +560,11 @@ function renderSponsorsSection(data, section) {
         ${sponsors
           .map(
             (item) => `
-          <article class="sponsor-partner-card">
-            ${item.logo_url ? `<img class="sponsor-logo" src="${escapeHtml(item.logo_url)}" alt="${escapeHtml(item.name)}" loading="lazy">` : ""}
+          <article class="sponsor-partner-card ${Number(item.featured) === 1 ? "is-featured" : ""}">
+            ${item.logo_url ? `<img class="card-media ${imageFitClass(item.image_fit, "contain")}" src="${escapeHtml(item.logo_url)}" alt="${escapeHtml(item.name)}" loading="lazy">` : ""}
             <h3>${escapeHtml(item.name)}</h3>
             <p>${escapeHtml(item.description || "")}</p>
-            ${item.website_url ? `<a class="cta" href="${escapeHtml(item.website_url)}" target="_blank" rel="noreferrer">Voir le site</a>` : ""}
+            ${item.website_url ? `<a class="cta" href="${escapeHtml(item.website_url)}" target="_blank" rel="noreferrer">${escapeHtml(item.cta_label || "Voir le site")}</a>` : ""}
           </article>
         `
           )
@@ -534,7 +620,7 @@ function renderCustomSection(data, section) {
     .filter((item) => Number(item.enabled) === 1)
     .sort((a, b) => Number(a.display_order) - Number(b.display_order));
   return `
-    <section class="section-shell">
+    <section id="blocs" class="section-shell">
       <div class="section-head">
         <div>
           <div class="section-tag">${escapeHtml(section.title || "Blocs personnalisés")}</div>
@@ -547,7 +633,7 @@ function renderCustomSection(data, section) {
           const height = Math.min(760, Math.max(180, Number(item.height_px) || 360));
           return `
           <article class="custom-block" style="--custom-block-width:${width}%;--custom-block-height:${height}px">
-            ${item.image_url ? `<img src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.title)}" loading="lazy">` : ""}
+            ${item.image_url ? `<img class="${imageFitClass(item.image_fit)}" src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.title)}" loading="lazy">` : ""}
             <div class="custom-block-copy">
               <h3>${escapeHtml(item.title)}</h3>
               <p>${escapeHtml(item.body)}</p>
@@ -609,11 +695,14 @@ function renderSections(data) {
     schedule: renderScheduleSection,
     team: renderTeamSection,
     pricing: renderPricingSection,
+    news: renderNewsSection,
     highlights: renderHighlightsSection,
     gallery: renderGallerySection,
     resources: renderResourcesSection,
     equipment: renderEquipmentSection,
     sponsors: renderSponsorsSection,
+    faq: renderFaqSection,
+    testimonials: renderTestimonialsSection,
     sponsor: renderSponsorSection,
     custom: renderCustomSection,
     contact: renderContactSection,
