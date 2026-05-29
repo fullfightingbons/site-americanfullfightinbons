@@ -283,7 +283,7 @@ function renderTeamSection(data, section) {
           .map(
             (item) => `
           <article class="team-card${textAlignClass(item.text_align)}">
-            ${item.image_url ? `<img class="team-photo" src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.full_name)}" loading="lazy">` : ""}
+            ${item.image_url ? `<img class="team-photo" src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.full_name)}" loading="lazy" decoding="async">` : ""}
             <div class="meta">${escapeHtml(item.role_label)}</div>
             <h3>${escapeHtml(item.full_name)}</h3>
             <div class="belt">${escapeHtml(item.belt_label)}</div>
@@ -376,7 +376,7 @@ function renderGallerySection(data, section) {
             (item, index) => `
           <article class="gallery-slide" data-slide-index="${index}">
             <div class="gallery-card${textAlignClass(item.text_align)}">
-              <img src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.alt_text || item.title)}" loading="lazy">
+              <img src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.alt_text || item.title)}" loading="lazy" decoding="async">
               <div class="gallery-card-copy">
                 <h3>${escapeHtml(item.title)}</h3>
                 <p>${escapeHtml(item.alt_text || "")}</p>
@@ -428,7 +428,7 @@ function renderNewsSection(data, section) {
       <div class="news-grid">
         ${news.map((item) => `
           <article class="news-card${textAlignClass(item.text_align)}">
-            ${item.image_url ? `<img class="card-media ${imageFitClass(item.image_fit)}" src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.title)}" loading="lazy">` : ""}
+            ${item.image_url ? `<img class="card-media ${imageFitClass(item.image_fit)}" src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.title)}" loading="lazy" decoding="async">` : ""}
             <div class="meta">${escapeHtml(item.badge || item.date_label || "")}</div>
             <h3>${escapeHtml(item.title)}</h3>
             <p>${escapeHtml(item.body || "")}</p>
@@ -481,7 +481,7 @@ function renderTestimonialsSection(data, section) {
       <div class="testimonials-grid">
         ${items.map((item) => `
           <article class="testimonial-card${textAlignClass(item.text_align)}">
-            ${item.image_url ? `<img class="testimonial-photo ${imageFitClass(item.image_fit)}" src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.author_name)}" loading="lazy">` : ""}
+            ${item.image_url ? `<img class="testimonial-photo ${imageFitClass(item.image_fit)}" src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.author_name)}" loading="lazy" decoding="async">` : ""}
             <p class="quote">“${escapeHtml(item.quote || "")}”</p>
             <h3>${escapeHtml(item.author_name)}</h3>
             <div class="meta">${escapeHtml(item.role_label || "")}</div>
@@ -514,7 +514,7 @@ function renderResourcesSection(data, section) {
           .map(
             (item) => `
           <article class="resource-card${textAlignClass(item.text_align)}">
-            ${item.image_url ? `<img class="card-media ${imageFitClass(item.image_fit, "contain")}" src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.title)}" loading="lazy">` : ""}
+            ${item.image_url ? `<img class="card-media ${imageFitClass(item.image_fit, "contain")}" src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.title)}" loading="lazy" decoding="async">` : ""}
             <h3>${escapeHtml(item.title)}</h3>
             <p>${escapeHtml(item.description)}</p>
             ${item.cta_href ? `<a class="cta" href="${escapeHtml(item.cta_href)}">${escapeHtml(item.cta_label || "Ouvrir")}</a>` : ""}
@@ -543,7 +543,7 @@ function renderEquipmentSection(data, section) {
           .map(
             (item) => `
           <article class="equipment-card${textAlignClass(item.text_align)}">
-            ${item.image_url ? `<img class="card-media ${imageFitClass(item.image_fit, "cover")}" src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.title)}" loading="lazy">` : ""}
+            ${item.image_url ? `<img class="card-media ${imageFitClass(item.image_fit, "cover")}" src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.title)}" loading="lazy" decoding="async">` : ""}
             <h3>${escapeHtml(item.title)}</h3>
             <p>${escapeHtml(item.description)}</p>
             ${item.cta_href ? `<a class="cta" href="${escapeHtml(item.cta_href)}">${escapeHtml(item.cta_label || "Ouvrir")}</a>` : ""}
@@ -574,7 +574,7 @@ function renderSponsorsSection(data, section) {
           .map(
             (item) => `
           <article class="sponsor-partner-card ${Number(item.featured) === 1 ? "is-featured" : ""}${textAlignClass(item.text_align)}">
-            ${item.logo_url ? `<img class="card-media ${imageFitClass(item.image_fit, "contain")}" src="${escapeHtml(item.logo_url)}" alt="${escapeHtml(item.name)}" loading="lazy">` : ""}
+            ${item.logo_url ? `<img class="card-media ${imageFitClass(item.image_fit, "contain")}" src="${escapeHtml(item.logo_url)}" alt="${escapeHtml(item.name)}" loading="lazy" decoding="async">` : ""}
             <h3>${escapeHtml(item.name)}</h3>
             <p>${escapeHtml(item.description || "")}</p>
             ${item.website_url ? `<a class="cta" href="${escapeHtml(item.website_url)}" target="_blank" rel="noreferrer">${escapeHtml(item.cta_label || "Voir le site")}</a>` : ""}
@@ -646,7 +646,7 @@ function renderCustomSection(data, section) {
           const height = Math.min(760, Math.max(180, Number(item.height_px) || 360));
           return `
           <article class="custom-block${textAlignClass(item.text_align)}" style="--custom-block-width:${width}%;--custom-block-height:${height}px">
-            ${item.image_url ? `<img class="${imageFitClass(item.image_fit)}" src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.title)}" loading="lazy">` : ""}
+            ${item.image_url ? `<img class="${imageFitClass(item.image_fit)}" src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.title)}" loading="lazy" decoding="async">` : ""}
             <div class="custom-block-copy">
               <h3>${escapeHtml(item.title)}</h3>
               <p>${escapeHtml(item.body)}</p>

@@ -42,6 +42,10 @@ body{
 }
 a{text-decoration:none;color:inherit}
 img{display:block;max-width:100%}
+.section-shell{
+  content-visibility:auto;
+  contain-intrinsic-size:1px 720px;
+}
 .topbar{
   position:sticky;
   top:0;
