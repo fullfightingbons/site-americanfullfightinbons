@@ -1324,6 +1324,9 @@ async function routeApi(request: Request, env: Env, pathname: string): Promise<R
   if (pathname === "/api/health" && request.method === "GET") {
     return ok({ date: new Date().toISOString() });
   }
+  if (pathname === "/api/version" && request.method === "GET") {
+    return ok({ service: "site-americanfullfightinbons", version: "1.0.0" });
+  }
   if (pathname === "/api/bootstrap" && request.method === "GET") {
     return ok(await getBootstrap(env));
   }
