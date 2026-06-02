@@ -228,6 +228,24 @@ function renderSocialLinks(data) {
   host.hidden = items.length === 0;
 }
 
+function renderHeroStats(data) {
+  const host = document.getElementById("hero-stats");
+  if (!host) return;
+  const scheduleCount = (data.schedule || []).length;
+  const teamCount = (data.team || []).length;
+  const sponsorCount = (data.sponsors || []).filter((item) => Number(item.enabled ?? 1) === 1).length;
+  const items = [
+    scheduleCount ? { value: scheduleCount, label: scheduleCount > 1 ? "créneaux semaine" : "créneau semaine" } : null,
+    teamCount ? { value: teamCount, label: teamCount > 1 ? "encadrants" : "encadrant" } : null,
+    { value: "13+", label: "ans et adultes" },
+    sponsorCount ? { value: sponsorCount, label: sponsorCount > 1 ? "partenaires" : "partenaire" } : null,
+  ].filter(Boolean).slice(0, 4);
+  host.innerHTML = items
+    .map((item) => `<div class="hero-stat"><strong>${escapeHtml(item.value)}</strong><span>${escapeHtml(item.label)}</span></div>`)
+    .join("");
+  host.hidden = items.length === 0;
+}
+
 function renderFooter(data) {
   setText("footer-note", data.site?.footerNote);
   setText("footer-legal", data.footer?.legal);
@@ -967,6 +985,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     setText("inpi-note", data.inpiNote);
     setLink("hero-primary", data.hero.primaryLabel, data.hero.primaryHref);
     setLink("hero-secondary", data.hero.secondaryLabel, data.hero.secondaryHref);
+    renderHeroStats(data);
     renderTopLinks(data.links || []);
     renderSections(data);
     renderFooter(data);
