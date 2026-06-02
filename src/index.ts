@@ -1338,11 +1338,13 @@ async function getUserFromBearer(request: Request, env: Env): Promise<Row | null
 async function routeApi(request: Request, env: Env, pathname: string): Promise<Response> {
   if (request.method === "OPTIONS") return withHeaders(new Response(null, { status: 204 }));
 
-  if (pathname === "/api/health" && request.method === "GET") {
-    return ok({ date: new Date().toISOString() });
+  if (pathname === "/api/health" && (request.method === "GET" || request.method === "HEAD")) {
+    const response = ok({ date: new Date().toISOString() });
+    return request.method === "HEAD" ? new Response(null, response) : response;
   }
-  if (pathname === "/api/version" && request.method === "GET") {
-    return ok({ service: "site-americanfullfightinbons", version: "1.0.0" });
+  if (pathname === "/api/version" && (request.method === "GET" || request.method === "HEAD")) {
+    const response = ok({ service: "site-americanfullfightinbons", version: "1.0.0" });
+    return request.method === "HEAD" ? new Response(null, response) : response;
   }
   if (pathname === "/api/bootstrap" && request.method === "GET") {
     return ok(await getBootstrap(env));
