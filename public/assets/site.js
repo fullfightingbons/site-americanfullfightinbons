@@ -26,6 +26,24 @@ function setLink(id, label, href) {
   if (href) element.href = href;
 }
 
+function setContactLink(id, label, href) {
+  const element = document.getElementById(id);
+  if (!element) return;
+  element.textContent = label || "";
+  if (href) {
+    element.href = href;
+    element.removeAttribute("aria-disabled");
+  } else {
+    element.removeAttribute("href");
+    element.setAttribute("aria-disabled", "true");
+  }
+}
+
+function phoneHref(value) {
+  const phone = String(value || "").replace(/[^\d+]/g, "");
+  return phone ? `tel:${phone}` : "";
+}
+
 function setVisible(id, visible) {
   const element = document.getElementById(id);
   if (!element) return;
@@ -979,8 +997,8 @@ window.addEventListener("DOMContentLoaded", async () => {
     setText("announcement-badge", data.announcement.badge);
     setText("announcement-title", data.announcement.title);
     setText("announcement-body", data.announcement.body);
-    setText("site-email", data.site.email);
-    setText("site-phone", data.site.phone);
+    setContactLink("site-email", data.site.email, data.site.email ? `mailto:${data.site.email}` : "");
+    setContactLink("site-phone", data.site.phone, phoneHref(data.site.phone));
     setText("site-address", data.site.address);
     setText("inpi-note", data.inpiNote);
     setLink("hero-primary", data.hero.primaryLabel, data.hero.primaryHref);
