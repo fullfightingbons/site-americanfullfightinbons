@@ -1,6 +1,7 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "site-americanfullfightinbons",
+  "account_id": "a11cb0253f0870d57b54f6eaaedb439c",
   "main": "src/index.ts",
   "compatibility_date": "2026-05-22",
   "workers_dev": true,
