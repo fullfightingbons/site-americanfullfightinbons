@@ -924,6 +924,7 @@
 .vb-card-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
   font: inherit;
   font-size: 0.75rem;
@@ -932,6 +933,18 @@
   border: 1px solid transparent;
   cursor: pointer;
   transition: all 0.12s;
+}
+
+.vb-card-btn--compact {
+  min-width: 28px;
+  padding: 0.2rem 0.35rem;
+  background: rgba(148,163,184,0.08);
+  border-color: rgba(148,163,184,0.16);
+  color: #cbd5e1;
+}
+
+.vb-card-btn--compact:hover {
+  background: rgba(148,163,184,0.18);
 }
 
 .vb-card-btn--edit {

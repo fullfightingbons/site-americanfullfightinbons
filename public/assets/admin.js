@@ -719,6 +719,10 @@ function renderSectionTextCard(item) {
         <div class="vb-entity-card-title">${meta.icon} ${escapeHtml(item.title || meta.label)}</div>
         <div class="vb-entity-card-actions">
           <span class="vb-entity-chip">${enabled ? "Visible" : "Masquée"}</span>
+          <button class="vb-card-btn vb-card-btn--compact" type="button"
+            data-move-kind="sections" data-move-id="${escapeHtml(item.id)}" data-move-direction="-1">↑</button>
+          <button class="vb-card-btn vb-card-btn--compact" type="button"
+            data-move-kind="sections" data-move-id="${escapeHtml(item.id)}" data-move-direction="1">↓</button>
           <button class="vb-card-btn vb-card-btn--edit" type="button"
             data-edit-kind="sections" data-edit-id="${escapeHtml(item.id)}">✎ Modifier</button>
         </div>
@@ -741,6 +745,10 @@ function renderEntityCard(kind, item, fields) {
         <div class="vb-entity-card-actions">
           ${sectionAnchorForKind(kind) ? `<button class="vb-card-btn" type="button"
             data-view-kind="${escapeHtml(kind)}">↗ Voir</button>` : ""}
+          <button class="vb-card-btn vb-card-btn--compact" type="button"
+            data-move-kind="${escapeHtml(kind)}" data-move-id="${escapeHtml(item.id)}" data-move-direction="-1">↑</button>
+          <button class="vb-card-btn vb-card-btn--compact" type="button"
+            data-move-kind="${escapeHtml(kind)}" data-move-id="${escapeHtml(item.id)}" data-move-direction="1">↓</button>
           <button class="vb-card-btn" type="button"
             data-duplicate-kind="${escapeHtml(kind)}" data-duplicate-id="${escapeHtml(item.id)}">Dupliquer</button>
           <button class="vb-card-btn vb-card-btn--edit" type="button"
@@ -1384,6 +1392,16 @@ document.addEventListener("click", async (event) => {
 
   if (button.dataset.viewKind) {
     openPublicSection(button.dataset.viewKind);
+    return;
+  }
+
+  if (button.dataset.moveKind && button.dataset.moveId && button.dataset.moveDirection) {
+    try {
+      await swapOrder(button.dataset.moveKind, button.dataset.moveId, button.dataset.moveDirection);
+      showStatus("Ordre mis à jour.", false);
+    } catch (err) {
+      showStatus(err.message || "Erreur");
+    }
     return;
   }
 
