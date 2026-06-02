@@ -50,6 +50,11 @@ function setMetaContent(selector, value) {
   if (element) element.setAttribute("content", value || "");
 }
 
+function setLinkHref(selector, value) {
+  const element = document.querySelector(selector);
+  if (element && value) element.setAttribute("href", value);
+}
+
 function setCssVar(name, value) {
   document.documentElement.style.setProperty(name, value ? `url("${String(value).replace(/"/g, '\\"')}")` : "none");
 }
@@ -130,11 +135,50 @@ function applyStaticContent(data) {
 }
 
 function applyMeta(data) {
+  const publicUrl = String(data.sitePublicUrl || window.location.origin).replace(/\/+$/, "");
   setMetaContent('meta[name="description"]', data.meta?.description);
   setMetaContent('meta[name="keywords"]', data.meta?.keywords);
   setMetaContent('meta[property="og:title"]', data.site?.name);
   setMetaContent('meta[property="og:description"]', data.meta?.description);
   setMetaContent('meta[property="og:image"]', data.design?.logoUrl);
+  setMetaContent('meta[property="og:url"]', publicUrl);
+  setMetaContent('meta[name="twitter:title"]', data.site?.name);
+  setMetaContent('meta[name="twitter:description"]', data.meta?.description);
+  setLinkHref("#site-canonical", publicUrl);
+  applyStructuredData(data, publicUrl);
+}
+
+function applyStructuredData(data, publicUrl) {
+  const element = document.getElementById("site-jsonld");
+  if (!element) return;
+  const sameAs = [
+    data.social?.facebookUrl,
+    data.social?.instagramUrl,
+    data.social?.youtubeUrl,
+    data.social?.tiktokUrl,
+  ].filter(Boolean);
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SportsActivityLocation",
+    name: data.site?.name || "American Full Fighting Bons en Chablais",
+    alternateName: data.site?.brandPrimary || "American Full Fighting",
+    url: publicUrl,
+    logo: data.design?.logoUrl || `${publicUrl}/assets/logo-affbc.png`,
+    image: data.design?.heroBackgroundImage || data.design?.logoUrl || `${publicUrl}/assets/logo-affbc.png`,
+    description: data.meta?.description || "",
+    email: data.site?.email || undefined,
+    telephone: data.site?.phone || undefined,
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: data.site?.address || "15 place Henri Boucher, 74890 Bons-en-Chablais",
+      addressLocality: "Bons-en-Chablais",
+      postalCode: "74890",
+      addressCountry: "FR",
+    },
+    sport: ["Full contact", "Boxe américaine", "Kick boxing"],
+    sameAs,
+  };
+  element.textContent = JSON.stringify(jsonLd, null, 2);
 }
 
 function renderTopLinks(links) {
