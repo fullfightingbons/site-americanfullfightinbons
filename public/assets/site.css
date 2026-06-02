@@ -42,6 +42,29 @@ body{
 }
 a{text-decoration:none;color:inherit}
 img{display:block;max-width:100%}
+.skip-link{
+  position:fixed;
+  left:1rem;
+  top:1rem;
+  z-index:100;
+  transform:translateY(-140%);
+  padding:.75rem 1rem;
+  border-radius:999px;
+  background:var(--white);
+  color:var(--ink);
+  font-weight:800;
+  box-shadow:0 14px 34px rgba(7,17,29,.2);
+  transition:transform .18s ease;
+}
+.skip-link:focus{transform:translateY(0)}
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible{
+  outline:3px solid rgba(214,172,84,.9);
+  outline-offset:3px;
+}
 .section-shell{
   content-visibility:auto;
   contain-intrinsic-size:1px 720px;
