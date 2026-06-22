@@ -1392,6 +1392,24 @@ async function routeApi(request: Request, env: Env, pathname: string): Promise<R
   return error("Not found", 404);
 }
 
+// ── Exports pour les tests unitaires (fonctions pures uniquement) ──
+export {
+  checkLoginRateLimit,
+  parseCookies,
+  quoteIdentifier,
+  toBase64Url,
+  fromBase64Url,
+  secureEquals,
+  sanitizeText,
+  sanitizeEmail,
+  sanitizeUrl,
+  normalizeDbValue,
+  escapeHtmlText,
+  parseBooleanSetting,
+  mergePricing,
+  normalizeGoogleReview,
+};
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
