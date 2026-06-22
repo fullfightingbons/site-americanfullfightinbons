@@ -29,7 +29,7 @@
     }
   ],
   "vars": {
-    "ENV": "dev",
+    "ENV": "production",
     "SITE_NAME": "American Full Fighting Bons en Chablais",
     "SITE_PUBLIC_URL": "https://americanfullfightingbons.fr",
     "CONTACT_EMAIL": "fullfightingbons@gmail.com",
