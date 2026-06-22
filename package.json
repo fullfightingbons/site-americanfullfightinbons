@@ -9,10 +9,12 @@
     "check": "tsc --noEmit && wrangler deploy --dry-run",
     "deploy": "wrangler deploy",
     "dev": "wrangler dev",
-    "seedLocalD1": "wrangler d1 migrations apply DB --local"
+    "seedLocalD1": "wrangler d1 migrations apply DB --local",
+    "test": "vitest run"
   },
   "devDependencies": {
     "typescript": "5.9.3",
+    "vitest": "^2.1.4",
     "wrangler": "4.97.0"
   }
 }
