@@ -24,25 +24,61 @@ const SESSION_COOKIE = "affbc_site_session";
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const PASSWORD_HASH_PREFIX = "pbkdf2_sha256";
 const MAX_PBKDF2_ITERATIONS = 100000;
-// Simple in-memory rate limiter for login attempts.
-// Resets on worker restart; sufficient as a first line of defence
-// (complement with Cloudflare Rate Limiting Rules for production).
-const loginAttempts = new Map<string, { count: number; resetAt: number }>();
-const LOGIN_MAX_ATTEMPTS = 10;
-const LOGIN_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+const LOGIN_MAX_ATTEMPTS = 8;
+const LOGIN_WINDOW_SEC = 15 * 60;       // 15 minutes
 const GOOGLE_REVIEWS_CACHE_TTL_MS = 30 * 60 * 1000;
 const googleReviewsCache = new Map<string, { expiresAt: number; data: Row[] }>();
 
-function checkLoginRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const entry = loginAttempts.get(ip);
-  if (!entry || entry.resetAt < now) {
-    loginAttempts.set(ip, { count: 1, resetAt: now + LOGIN_WINDOW_MS });
+/**
+ * Rate limiting login persistant via D1 — résistant au multi-instances Cloudflare.
+ * Retourne true si la requête est autorisée, false si bloquée.
+ */
+async function checkLoginRateLimit(ip: string, env: Env): Promise<boolean> {
+  const windowStart = new Date(Date.now() - LOGIN_WINDOW_SEC * 1000).toISOString();
+  try {
+    // Nettoyer les entrées expirées (best effort)
+    await env.DB.prepare(
+      "DELETE FROM auth_rate_limits WHERE ip = ? AND last_attempt < ?"
+    ).bind(ip, windowStart).run();
+
+    const row = await env.DB.prepare(
+      "SELECT attempt_count, blocked_until FROM auth_rate_limits WHERE ip = ? LIMIT 1"
+    ).bind(ip).first<Row>();
+
+    if (row?.blocked_until) {
+      const blockedUntil = new Date(String(row.blocked_until)).getTime();
+      if (Date.now() < blockedUntil) return false;
+    }
+
+    if (row && Number(row.attempt_count) >= LOGIN_MAX_ATTEMPTS) {
+      // Bloquer pour 15 min
+      const blockedUntil = new Date(Date.now() + LOGIN_WINDOW_SEC * 1000).toISOString();
+      await env.DB.prepare(
+        "UPDATE auth_rate_limits SET blocked_until = ?, last_attempt = CURRENT_TIMESTAMP WHERE ip = ?"
+      ).bind(blockedUntil, ip).run();
+      return false;
+    }
+
+    // Incrémenter ou créer
+    await env.DB.prepare(`
+      INSERT INTO auth_rate_limits (ip, attempt_count, last_attempt)
+      VALUES (?, 1, CURRENT_TIMESTAMP)
+      ON CONFLICT(ip) DO UPDATE SET
+        attempt_count = attempt_count + 1,
+        last_attempt  = CURRENT_TIMESTAMP
+    `).bind(ip).run();
+
+    return true;
+  } catch {
+    // En cas d'erreur D1 (table manquante, etc.), ne pas bloquer
     return true;
   }
-  if (entry.count >= LOGIN_MAX_ATTEMPTS) return false;
-  entry.count++;
-  return true;
+}
+
+async function resetLoginRateLimit(ip: string, env: Env): Promise<void> {
+  try {
+    await env.DB.prepare("DELETE FROM auth_rate_limits WHERE ip = ?").bind(ip).run();
+  } catch { /* best effort */ }
 }
 
 const PUBLIC_TABLES = new Set([
@@ -144,11 +180,24 @@ function json(data: unknown, init: ResponseInit = {}): Response {
   return new Response(JSON.stringify(data), { ...init, headers });
 }
 
-function withHeaders(response: Response): Response {
+const ALLOWED_ORIGINS = new Set([
+  "https://americanfullfightingbons.fr",
+  "https://www.americanfullfightingbons.fr",
+  "https://inscription.americanfullfightingbons.fr",
+  "https://gestion.americanfullfightingbons.fr",
+  "https://boutique.americanfullfightingbons.fr",
+  "https://calendrier.americanfullfightingbons.fr",
+]);
+
+function withHeaders(response: Response, request?: Request): Response {
   const headers = new Headers(response.headers);
-  headers.set("access-control-allow-origin", "*");
+  // CORS : liste d'origines explicites, jamais de wildcard
+  const origin = request?.headers.get("origin") ?? "";
+  const allowOrigin = ALLOWED_ORIGINS.has(origin) ? origin : "https://americanfullfightingbons.fr";
+  headers.set("access-control-allow-origin", allowOrigin);
   headers.set("access-control-allow-methods", "GET, POST, OPTIONS");
-  headers.set("access-control-allow-headers", "Content-Type");
+  headers.set("access-control-allow-headers", "Content-Type, Authorization");
+  headers.set("vary", "Origin");
   headers.set("x-content-type-options", "nosniff");
   headers.set("x-frame-options", "DENY");
   headers.set("referrer-policy", "strict-origin-when-cross-origin");
@@ -175,12 +224,12 @@ function withHeaders(response: Response): Response {
   });
 }
 
-function ok(data: unknown, init: ResponseInit = {}): Response {
-  return withHeaders(json({ ok: true, data }, init));
+function ok(data: unknown, init: ResponseInit = {}, request?: Request): Response {
+  return withHeaders(json({ ok: true, data }, init), request);
 }
 
-function error(message: string, status = 400): Response {
-  return withHeaders(json({ ok: false, error: message }, { status }));
+function error(message: string, status = 400, request?: Request): Response {
+  return withHeaders(json({ ok: false, error: message }, { status }), request);
 }
 
 function parseCookies(request: Request): Record<string, string> {
@@ -1109,20 +1158,23 @@ async function handleDonationCheckoutStatus(request: Request, env: Env): Promise
 
 async function handleLogin(request: Request, env: Env): Promise<Response> {
   const loginIp = request.headers.get("cf-connecting-ip") ?? "unknown";
-  if (!checkLoginRateLimit(loginIp)) {
-    return error("Trop de tentatives. Réessayez dans 15 minutes.", 429);
+  if (!(await checkLoginRateLimit(loginIp, env))) {
+    return error("Trop de tentatives. Réessayez dans 15 minutes.", 429, request);
   }
   const payload = (await request.json()) as Row;
   const email = sanitizeText(payload.email, 190).toLowerCase();
   const password = String(payload.password || "");
-  if (!email || !password) return error("Email et mot de passe requis.");
+  if (!email || !password) return error("Email et mot de passe requis.", 400, request);
   const user = await env.DB.prepare(
     "SELECT * FROM admin_users WHERE email = ? AND active = 1 LIMIT 1"
   )
     .bind(email)
     .first<Row>();
-  if (!user) return error("Identifiants invalides.", 401);
-  if (!(await verifyPassword(password, user.password_hash))) return error("Identifiants invalides.", 401);
+  if (!user) return error("Identifiants invalides.", 401, request);
+  if (!(await verifyPassword(password, user.password_hash))) return error("Identifiants invalides.", 401, request);
+
+  // Connexion réussie : réinitialiser le rate limiter
+  await resetLoginRateLimit(loginIp, env);
 
   const token = await createSessionToken(
     { userId: String(user.id), expiresAt: Date.now() + SESSION_TTL_MS },
@@ -1134,7 +1186,7 @@ async function handleLogin(request: Request, env: Env): Promise<Response> {
       email: user.email,
       display_name: user.display_name,
     },
-  });
+  }, {}, request);
   response.headers.append(
     "Set-Cookie",
     `${SESSION_COOKIE}=${encodeURIComponent(token)}; HttpOnly; Path=/; Max-Age=${Math.floor(
@@ -1336,18 +1388,18 @@ async function getUserFromBearer(request: Request, env: Env): Promise<Row | null
 }
 
 async function routeApi(request: Request, env: Env, pathname: string): Promise<Response> {
-  if (request.method === "OPTIONS") return withHeaders(new Response(null, { status: 204 }));
+  if (request.method === "OPTIONS") return withHeaders(new Response(null, { status: 204 }), request);
 
   if (pathname === "/api/health" && (request.method === "GET" || request.method === "HEAD")) {
-    const response = ok({ date: new Date().toISOString() });
+    const response = ok({ date: new Date().toISOString() }, {}, request);
     return request.method === "HEAD" ? new Response(null, response) : response;
   }
   if (pathname === "/api/version" && (request.method === "GET" || request.method === "HEAD")) {
-    const response = ok({ service: "site-americanfullfightinbons", version: "1.0.0" });
+    const response = ok({ service: "site-americanfullfightinbons", version: "1.0.0" }, {}, request);
     return request.method === "HEAD" ? new Response(null, response) : response;
   }
   if (pathname === "/api/bootstrap" && request.method === "GET") {
-    return ok(await getBootstrap(env));
+    return ok(await getBootstrap(env), {}, request);
   }
   if (pathname === "/api/contact" && request.method === "POST") {
     return handleContact(request, env);
@@ -1381,7 +1433,7 @@ async function routeApi(request: Request, env: Env, pathname: string): Promise<R
     const cookieUser = await getCurrentUser(request, env);
     if (!cookieUser) {
       const bearerUser = await getUserFromBearer(request, env);
-      if (!bearerUser) return error("Unauthorized", 401);
+      if (!bearerUser) return error("Unauthorized", 401, request);
     }
     return adminBootstrap(request, env);
   }
@@ -1389,7 +1441,7 @@ async function routeApi(request: Request, env: Env, pathname: string): Promise<R
     return handleAdminSave(request, env);
   }
 
-  return error("Not found", 404);
+  return error("Not found", 404, request);
 }
 
 // ── Exports pour les tests unitaires (fonctions pures uniquement) ──
@@ -1418,8 +1470,8 @@ export default {
         return await routeApi(request, env, url.pathname);
       } catch (caught) {
         const message = caught instanceof Error ? caught.message : "Erreur interne";
-        if (message === "Unauthorized") return error(message, 401);
-        return error(message, 500);
+        if (message === "Unauthorized") return error(message, 401, request);
+        return error(message, 500, request);
       }
     }
     return env.ASSETS.fetch(request);
