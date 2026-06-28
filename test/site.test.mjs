@@ -139,21 +139,75 @@ describe('parseBooleanSetting', () => {
   });
 });
 
+/**
+ * Faux D1Database minimal, suffisant pour les requêtes utilisées par
+ * checkLoginRateLimit() (DELETE / SELECT / INSERT...ON CONFLICT / UPDATE sur
+ * la table auth_rate_limits). checkLoginRateLimit() est passé en D1 réel
+ * (persistant, multi-instances) au lieu de l'ancien Map en mémoire — ce
+ * stub reproduit le même comportement pour les tests unitaires.
+ */
+function createFakeAuthRateLimitDb() {
+  const rows = new Map(); // ip -> { attempt_count, last_attempt, blocked_until }
+  return {
+    prepare(sql) {
+      const bound = { sql, args: [] };
+      return {
+        bind(...args) {
+          bound.args = args;
+          return this;
+        },
+        async first() {
+          if (sql.trim().startsWith('SELECT')) {
+            const [ip] = bound.args;
+            return rows.get(ip) || null;
+          }
+          return null;
+        },
+        async run() {
+          const kind = sql.trim().split(/\s+/, 1)[0]; // 1er mot : DELETE / INSERT / UPDATE
+          if (kind === 'DELETE') {
+            const [ip, windowStart] = bound.args;
+            const row = rows.get(ip);
+            if (row && row.last_attempt && row.last_attempt < windowStart) {
+              rows.delete(ip);
+            }
+          } else if (kind === 'UPDATE') {
+            const [blockedUntil, ip] = bound.args;
+            const row = rows.get(ip) || { attempt_count: 0 };
+            rows.set(ip, { ...row, blocked_until: blockedUntil });
+          } else if (kind === 'INSERT') {
+            const [ip] = bound.args;
+            const row = rows.get(ip);
+            if (row) {
+              rows.set(ip, { ...row, attempt_count: Number(row.attempt_count) + 1 });
+            } else {
+              rows.set(ip, { attempt_count: 1, last_attempt: new Date().toISOString(), blocked_until: null });
+            }
+          }
+          return { success: true };
+        },
+      };
+    },
+  };
+}
+
 describe('checkLoginRateLimit', () => {
-  it('autorise les 10 premières tentatives puis bloque', () => {
+  it('autorise les 8 premières tentatives puis bloque', async () => {
+    const env = { DB: createFakeAuthRateLimitDb() };
     const ip = 'test-ip-' + Math.random();
-    for (let i = 0; i < 10; i++) {
-      expect(checkLoginRateLimit(ip)).toBe(true);
+    for (let i = 0; i < 8; i++) {
+      expect(await checkLoginRateLimit(ip, env)).toBe(true);
     }
-    expect(checkLoginRateLimit(ip)).toBe(false);
+    expect(await checkLoginRateLimit(ip, env)).toBe(false);
   });
 
-  it('traite chaque IP indépendamment', () => {
+  it('traite chaque IP indépendamment', async () => {
+    const env = { DB: createFakeAuthRateLimitDb() };
     const ipA = 'test-ip-a-' + Math.random();
     const ipB = 'test-ip-b-' + Math.random();
-    for (let i = 0; i < 10; i++) checkLoginRateLimit(ipA);
-    expect(checkLoginRateLimit(ipA)).toBe(false);
-    expect(checkLoginRateLimit(ipB)).toBe(true);
+    for (let i = 0; i < 8; i++) await checkLoginRateLimit(ipA, env);
+    expect(await checkLoginRateLimit(ipA, env)).toBe(false);
+    expect(await checkLoginRateLimit(ipB, env)).toBe(true);
   });
 });
 

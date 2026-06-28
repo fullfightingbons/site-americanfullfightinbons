@@ -1341,7 +1341,7 @@ async function handleAdminSave(request: Request, env: Env): Promise<Response> {
 
 async function handleAdminLogin(request: Request, env: Env): Promise<Response> {
   const loginIp = request.headers.get("cf-connecting-ip") ?? "unknown";
-  if (!checkLoginRateLimit(loginIp)) {
+  if (!(await checkLoginRateLimit(loginIp, env))) {
     return error("Trop de tentatives. Réessayez dans 15 minutes.", 429);
   }
   const payload = (await request.json()) as Row;
