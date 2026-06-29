@@ -7,6 +7,22 @@ function escapeHtml(value) {
     .replace(/'/g, "&#39;");
 }
 
+/**
+ * Neutralise les schémas d'URL dangereux (javascript:, data:, vbscript:...)
+ * dans les liens éditables via le Visual Builder admin. escapeHtml() protège
+ * contre l'injection de balises/attributs, mais pas contre un schéma
+ * d'URI malveillant glissé dans un href par ailleurs syntaxiquement valide
+ * (ex: href="javascript:fetch(...)"). On n'autorise que http(s), mailto,
+ * tel, ou les chemins relatifs/ancres sans schéma explicite.
+ */
+function safeHref(value) {
+  const v = String(value ?? "").trim();
+  if (!v) return "";
+  if (/^(https?:|mailto:|tel:|#|\/)/i.test(v)) return v;
+  if (!/^[a-z][a-z0-9+.-]*:/i.test(v)) return v; // pas de schéma → relatif, OK
+  return "#"; // schéma non reconnu (javascript:, data:, vbscript:, etc.)
+}
+
 async function fetchBootstrap() {
   const response = await fetch("/api/bootstrap");
   const payload = await response.json();
@@ -60,7 +76,7 @@ function visibleButtons(data, placement) {
 
 function renderCustomButton(item, fallbackClass = "btn btn-dark") {
   const className = item.style === "red" ? "btn btn-red" : item.style === "link" ? "utility-link" : fallbackClass;
-  return `<a class="${escapeHtml(className)}" href="${escapeHtml(item.href)}">${escapeHtml(item.label)}</a>`;
+  return `<a class="${escapeHtml(className)}" href="${escapeHtml(safeHref(item.href))}">${escapeHtml(item.label)}</a>`;
 }
 
 function setMetaContent(selector, value) {
@@ -210,7 +226,7 @@ function renderTopLinks(links) {
       <article class="quick-link-card">
         <strong>${escapeHtml(item.title)}</strong>
         <p>${escapeHtml(item.description)}</p>
-        <a href="${escapeHtml(item.href)}">${escapeHtml(item.cta_label || window.__siteData?.labels?.quickLinkCta || "Accéder")}</a>
+        <a href="${escapeHtml(safeHref(item.href))}">${escapeHtml(item.cta_label || window.__siteData?.labels?.quickLinkCta || "Accéder")}</a>
       </article>
     `
     )
@@ -220,7 +236,7 @@ function renderTopLinks(links) {
       <article class="quick-link-card">
         <strong>${escapeHtml(item.label)}</strong>
         <p>${escapeHtml(item.href)}</p>
-        <a href="${escapeHtml(item.href)}">${escapeHtml(item.label)}</a>
+        <a href="${escapeHtml(safeHref(item.href))}">${escapeHtml(item.label)}</a>
       </article>
     `
       )
@@ -240,7 +256,7 @@ function renderSocialLinks(data) {
   ].filter((item) => item.href);
 
   host.innerHTML = items
-    .map((item) => `<a class="footer-social-link" href="${escapeHtml(item.href)}" target="_blank" rel="noreferrer">${escapeHtml(item.label)}</a>`)
+    .map((item) => `<a class="footer-social-link" href="${escapeHtml(safeHref(item.href))}" target="_blank" rel="noreferrer">${escapeHtml(item.label)}</a>`)
     .join("");
 
   host.hidden = items.length === 0;
@@ -312,8 +328,8 @@ function renderSpotlightSection(data, section) {
           <h3>${escapeHtml(data.spotlight.title)}</h3>
           <p>${escapeHtml(data.spotlight.body)}</p>
           <div class="spotlight-actions">
-            ${data.spotlight.primaryEnabled !== false && data.spotlight.primaryHref ? `<a class="btn btn-red" href="${escapeHtml(data.spotlight.primaryHref)}">${escapeHtml(data.spotlight.primaryLabel || "Ouvrir")}</a>` : ""}
-            ${data.spotlight.secondaryEnabled !== false && data.spotlight.secondaryHref ? `<a class="btn btn-dark" href="${escapeHtml(data.spotlight.secondaryHref)}">${escapeHtml(data.spotlight.secondaryLabel || "Ouvrir")}</a>` : ""}
+            ${data.spotlight.primaryEnabled !== false && data.spotlight.primaryHref ? `<a class="btn btn-red" href="${escapeHtml(safeHref(data.spotlight.primaryHref))}">${escapeHtml(data.spotlight.primaryLabel || "Ouvrir")}</a>` : ""}
+            ${data.spotlight.secondaryEnabled !== false && data.spotlight.secondaryHref ? `<a class="btn btn-dark" href="${escapeHtml(safeHref(data.spotlight.secondaryHref))}">${escapeHtml(data.spotlight.secondaryLabel || "Ouvrir")}</a>` : ""}
           </div>
         </div>
       </article>
@@ -427,7 +443,7 @@ function renderHighlightsSection(data, section) {
             <div class="meta">${escapeHtml(item.badge || "")}</div>
             <h3>${escapeHtml(item.title)}</h3>
             <p>${escapeHtml(item.body)}</p>
-            ${item.cta_href ? `<a class="btn btn-dark" href="${escapeHtml(item.cta_href)}">${escapeHtml(item.cta_label || "Ouvrir")}</a>` : ""}
+            ${item.cta_href ? `<a class="btn btn-dark" href="${escapeHtml(safeHref(item.cta_href))}">${escapeHtml(item.cta_label || "Ouvrir")}</a>` : ""}
           </article>
         `
           )
@@ -512,7 +528,7 @@ function renderNewsSection(data, section) {
             <div class="meta">${escapeHtml(item.badge || item.date_label || "")}</div>
             <h3>${escapeHtml(item.title)}</h3>
             <p>${escapeHtml(item.body || "")}</p>
-            ${item.cta_href ? `<a class="cta" href="${escapeHtml(item.cta_href)}">${escapeHtml(item.cta_label || "Ouvrir")}</a>` : ""}
+            ${item.cta_href ? `<a class="cta" href="${escapeHtml(safeHref(item.cta_href))}">${escapeHtml(item.cta_label || "Ouvrir")}</a>` : ""}
           </article>
         `).join("")}
       </div>
@@ -571,7 +587,7 @@ function renderTestimonialsSection(data, section) {
       </div>
       ${data.googleReviews?.source === "google" && data.googleReviews?.ctaHref ? `
         <div class="section-actions">
-          <a class="btn btn-dark" href="${escapeHtml(data.googleReviews.ctaHref)}" target="_blank" rel="noreferrer">${escapeHtml(data.googleReviews.ctaLabel || "Voir les avis Google")}</a>
+          <a class="btn btn-dark" href="${escapeHtml(safeHref(data.googleReviews.ctaHref))}" target="_blank" rel="noreferrer">${escapeHtml(data.googleReviews.ctaLabel || "Voir les avis Google")}</a>
         </div>
       ` : ""}
     </section>
@@ -597,7 +613,7 @@ function renderResourcesSection(data, section) {
             ${item.image_url ? `<img class="card-media ${imageFitClass(item.image_fit, "contain")}" src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.title)}" loading="lazy" decoding="async">` : ""}
             <h3>${escapeHtml(item.title)}</h3>
             <p>${escapeHtml(item.description)}</p>
-            ${item.cta_href ? `<a class="cta" href="${escapeHtml(item.cta_href)}">${escapeHtml(item.cta_label || "Ouvrir")}</a>` : ""}
+            ${item.cta_href ? `<a class="cta" href="${escapeHtml(safeHref(item.cta_href))}">${escapeHtml(item.cta_label || "Ouvrir")}</a>` : ""}
           </article>
         `
           )
@@ -626,7 +642,7 @@ function renderEquipmentSection(data, section) {
             ${item.image_url ? `<img class="card-media ${imageFitClass(item.image_fit, "cover")}" src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.title)}" loading="lazy" decoding="async">` : ""}
             <h3>${escapeHtml(item.title)}</h3>
             <p>${escapeHtml(item.description)}</p>
-            ${item.cta_href ? `<a class="cta" href="${escapeHtml(item.cta_href)}">${escapeHtml(item.cta_label || "Ouvrir")}</a>` : ""}
+            ${item.cta_href ? `<a class="cta" href="${escapeHtml(safeHref(item.cta_href))}">${escapeHtml(item.cta_label || "Ouvrir")}</a>` : ""}
           </article>
         `
           )
@@ -657,7 +673,7 @@ function renderSponsorsSection(data, section) {
             ${item.logo_url ? `<img class="card-media ${imageFitClass(item.image_fit, "contain")}" src="${escapeHtml(item.logo_url)}" alt="${escapeHtml(item.name)}" loading="lazy" decoding="async">` : ""}
             <h3>${escapeHtml(item.name)}</h3>
             <p>${escapeHtml(item.description || "")}</p>
-            ${item.website_url ? `<a class="cta" href="${escapeHtml(item.website_url)}" target="_blank" rel="noreferrer">${escapeHtml(item.cta_label || "Voir le site")}</a>` : ""}
+            ${item.website_url ? `<a class="cta" href="${escapeHtml(safeHref(item.website_url))}" target="_blank" rel="noreferrer">${escapeHtml(item.cta_label || "Voir le site")}</a>` : ""}
           </article>
         `
           )
@@ -700,7 +716,7 @@ function renderSponsorSection(data, section) {
           </form>
         ` : `
           <div class="spotlight-actions">
-            ${data.sponsor.ctaHref ? `<a class="btn btn-red" href="${escapeHtml(data.sponsor.ctaHref)}">${escapeHtml(data.sponsor.ctaLabel || "Ouvrir")}</a>` : ""}
+            ${data.sponsor.ctaHref ? `<a class="btn btn-red" href="${escapeHtml(safeHref(data.sponsor.ctaHref))}">${escapeHtml(data.sponsor.ctaLabel || "Ouvrir")}</a>` : ""}
           </div>
         `}
       </article>
@@ -730,7 +746,7 @@ function renderCustomSection(data, section) {
             <div class="custom-block-copy">
               <h3>${escapeHtml(item.title)}</h3>
               <p>${escapeHtml(item.body)}</p>
-              ${item.cta_href ? `<a class="btn btn-red" href="${escapeHtml(item.cta_href)}">${escapeHtml(item.cta_label || "Ouvrir")}</a>` : ""}
+              ${item.cta_href ? `<a class="btn btn-red" href="${escapeHtml(safeHref(item.cta_href))}">${escapeHtml(item.cta_label || "Ouvrir")}</a>` : ""}
             </div>
           </article>`;
         }).join("")}
