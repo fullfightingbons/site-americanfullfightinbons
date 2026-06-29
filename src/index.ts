@@ -1462,18 +1462,48 @@ export {
   normalizeGoogleReview,
 };
 
+/**
+ * En-têtes de sécurité HTTP appliqués à toute réponse. Jusqu'ici ce Worker
+ * n'en envoyait aucun, contrairement à boutique/calendrier/inscription qui
+ * en ont déjà une partie — défense en profondeur, en complément de
+ * l'échappement HTML appliqué côté front (public/assets/site.js) et de
+ * safeHref() pour les liens éditables via le Visual Builder.
+ */
+const SECURITY_HEADERS: Record<string, string> = {
+  "X-Content-Type-Options": "nosniff",
+  "X-Frame-Options": "DENY",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+  // 'unsafe-inline' nécessaire : public/assets/site.js et le Visual Builder
+  // n'utilisent pas de nonce CSP. Le CSP protège malgré tout contre le
+  // chargement de scripts/styles externes et restreint connect-src.
+  "Content-Security-Policy":
+    "default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+    "font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; connect-src 'self'; " +
+    "frame-src 'self' https://www.google.com https://maps.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+};
+
+function withSecurityHeaders(response: Response): Response {
+  const headers = new Headers(response.headers);
+  for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
+    if (!headers.has(key)) headers.set(key, value);
+  }
+  return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+    let response: Response;
     if (url.pathname.startsWith("/api/")) {
       try {
-        return await routeApi(request, env, url.pathname);
+        response = await routeApi(request, env, url.pathname);
       } catch (caught) {
         const message = caught instanceof Error ? caught.message : "Erreur interne";
-        if (message === "Unauthorized") return error(message, 401, request);
-        return error(message, 500, request);
+        response = message === "Unauthorized" ? error(message, 401, request) : error(message, 500, request);
       }
+    } else {
+      response = await env.ASSETS.fetch(request);
     }
-    return env.ASSETS.fetch(request);
+    return withSecurityHeaders(response);
   },
 };

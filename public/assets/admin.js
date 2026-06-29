@@ -305,6 +305,16 @@ function escapeHtml(value) {
     .replace(/'/g, "&#39;");
 }
 
+// Voir public/assets/site.js — même garde-fou de schéma d'URL (empêche
+// javascript:/data: dans un href ou un src d'iframe admin-éditable).
+function safeHref(value) {
+  const v = String(value ?? "").trim();
+  if (!v) return "";
+  if (/^(https?:|mailto:|tel:|#|\/)/i.test(v)) return v;
+  if (!/^[a-z][a-z0-9+.-]*:/i.test(v)) return v;
+  return "#";
+}
+
 function inputValue(value) {
   return escapeHtml(value);
 }
@@ -627,7 +637,7 @@ function renderSettingsPanel(groupId) {
         <div class="vb-map-preview-wrapper">
           <div class="vb-map-label">Prévisualisation carte</div>
           <iframe id="map-preview" class="map-preview" loading="lazy"
-            src="${escapeHtml(settings["contact_map_embed_url"] || "")}"></iframe>
+            src="${escapeHtml(safeHref(settings["contact_map_embed_url"] || ""))}"></iframe>
           <div class="vb-map-actions">
             <button class="btn btn-dark premium-btn-secondary" type="button" id="generate-map-url">
               Générer l'URL Google Maps
@@ -1953,7 +1963,7 @@ document.addEventListener("dragend", () => { dragItem = null; });
 document.addEventListener("input", (event) => {
   if (event.target.name === "contact_map_embed_url") {
     const iframe = document.getElementById("map-preview");
-    if (iframe) iframe.src = event.target.value;
+    if (iframe) iframe.src = safeHref(event.target.value);
   }
 });
 

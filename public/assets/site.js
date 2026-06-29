@@ -772,7 +772,7 @@ function renderContactSection(data, section) {
           ${data.contactForm?.mapEmbedUrl ? `
             <div class="contact-map-frame">
             <iframe
-            src="${escapeHtml(data.contactForm.mapEmbedUrl)}"
+            src="${escapeHtml(safeHref(data.contactForm.mapEmbedUrl))}"
             loading="lazy"
             referrerpolicy="no-referrer-when-downgrade"
             allowfullscreen
@@ -834,7 +834,7 @@ function renderMainMap(url) {
 
   host.innerHTML = `
   <iframe
-  src="${escapeHtml(url)}"
+  src="${escapeHtml(safeHref(url))}"
   loading="lazy"
   referrerpolicy="no-referrer-when-downgrade"
   allowfullscreen
