@@ -1,0 +1,53 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "site-americanfullfightinbons",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-05-22",
+  "workers_dev": true,
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": [
+      "/",
+      "/admin",
+      "/admin/*",
+      "/api/*"
+    ]
+  },
+  "observability": {
+    "enabled": true
+  },
+  "routes": [
+    {
+      "pattern": "americanfullfightingbons.fr",
+      "custom_domain": true
+    },
+    {
+      "pattern": "www.americanfullfightingbons.fr",
+      "custom_domain": true
+    }
+  ],
+  "vars": {
+    "ENV": "production",
+    "SITE_NAME": "American Full Fighting Bons en Chablais",
+    "SITE_PUBLIC_URL": "https://americanfullfightingbons.fr",
+    "CONTACT_EMAIL": "fullfightingbons@gmail.com",
+    "CONTACT_PHONE": "0699958177",
+    "CONTACT_ADDRESS": "15 place Henri Boucher, 74890 Bons-en-Chablais",
+    "CONTACT_FORM_FROM_EMAIL": "contact@americanfullfightingbons.fr",
+    "CONTACT_FORM_TO_EMAIL": "fullfightingbons@gmail.com"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "site-americanfullfightinbons",
+      "database_id": "<SITE_DATABASE_ID>",
+      "migrations_dir": "migrations"
+    },
+    {
+      "binding": "AFFBC_DB",
+      "database_name": "affbc-production",
+      "database_id": "<AFFBC_PRODUCTION_DATABASE_ID>"
+    }
+  ]
+}
