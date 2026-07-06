@@ -1,3 +1,11 @@
+import {
+  renderTopLinksHtml,
+  renderHeroStatsHtml,
+  renderSocialLinksHtml,
+  renderSectionsHtml,
+  buildJsonLd,
+} from "../public/assets/sections-render.mjs";
+
 interface Env {
   ASSETS: Fetcher;
   DB: D1Database;
@@ -1478,8 +1486,11 @@ const SECURITY_HEADERS: Record<string, string> = {
   // chargement de scripts/styles externes et restreint connect-src.
   "Content-Security-Policy":
     "default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
-    "font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; connect-src 'self'; " +
-    "frame-src 'self' https://www.google.com https://maps.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+    "font-src 'self' https://fonts.gstatic.com; " +
+    "script-src 'self' 'unsafe-inline' https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://www.googletagservices.com https://tpc.googlesyndication.com https://fundingchoicesmessages.google.com https://www.gstatic.com; " +
+    "connect-src 'self' https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://www.google.com https://*.googlesyndication.com https://fundingchoicesmessages.google.com https://*.fundingchoicesmessages.google.com; " +
+    "frame-src 'self' https://www.google.com https://maps.google.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://www.googletagservices.com https://fundingchoicesmessages.google.com; " +
+    "frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
 };
 
 function withSecurityHeaders(response: Response): Response {
@@ -1488,6 +1499,129 @@ function withSecurityHeaders(response: Response): Response {
     if (!headers.has(key)) headers.set(key, value);
   }
   return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+}
+
+/**
+ * ─── Rendu HTML côté serveur (SSR) de la page d'accueil ─────────────────
+ *
+ * Auparavant, public/index.html était servi tel quel (des <div id="..."> vides)
+ * et tout le contenu (tarifs, planning, présentation du club, etc.) n'était
+ * injecté qu'après coup en JS, via un fetch("/api/bootstrap") côté navigateur.
+ * Un crawler qui ne va pas jusqu'au bout de l'exécution JS (ou qui juge la
+ * page sur son HTML brut, comme peut le faire une revue Google AdSense) ne
+ * voyait donc quasiment aucun texte.
+ *
+ * On utilise ici HTMLRewriter (natif aux Workers) pour injecter le contenu
+ * réel directement dans le HTML avant de le renvoyer. Les fonctions de rendu
+ * (renderSectionsHtml, etc.) viennent de public/assets/sections-render.mjs,
+ * le même module que site.js utilise côté navigateur — une seule source de
+ * vérité pour le HTML généré. site.js continue de tourner ensuite et
+ * "re-rend" par-dessus le même contenu : aucun changement visuel, mais le
+ * HTML initial contient désormais tout le texte.
+ */
+class SetText implements HTMLRewriterElementContentHandlers {
+  constructor(private value: string | undefined | null) {}
+  element(el: Element) {
+    if (this.value) el.setInnerContent(this.value);
+  }
+}
+
+class SetHtml implements HTMLRewriterElementContentHandlers {
+  constructor(private value: string | undefined | null) {}
+  element(el: Element) {
+    el.setInnerContent(this.value || "", { html: true });
+  }
+}
+
+class SetAttr implements HTMLRewriterElementContentHandlers {
+  constructor(private name: string, private value: string | undefined | null) {}
+  element(el: Element) {
+    if (this.value) el.setAttribute(this.name, this.value);
+  }
+}
+
+class SetLink implements HTMLRewriterElementContentHandlers {
+  constructor(private label: string | undefined | null, private href: string | undefined | null, private visible = true) {}
+  element(el: Element) {
+    if (this.label) el.setInnerContent(this.label);
+    if (this.href) el.setAttribute("href", this.href);
+    if (!this.visible) {
+      el.setAttribute("hidden", "");
+      el.setAttribute("aria-hidden", "true");
+      el.setAttribute("style", "display:none");
+    }
+  }
+}
+
+function phoneHrefServer(value: unknown): string {
+  const phone = String(value || "").replace(/[^\d+]/g, "");
+  return phone ? `tel:${phone}` : "";
+}
+
+async function renderHomepage(request: Request, env: Env): Promise<Response> {
+  const [data, base] = await Promise.all([getBootstrap(env), env.ASSETS.fetch(request)]);
+  if (!base.ok || !(base.headers.get("content-type") || "").includes("text/html")) return base;
+
+  const publicUrl = String(data.sitePublicUrl || new URL(request.url).origin).replace(/\/+$/, "");
+  const site = (data.site || {}) as Row;
+  const navigation = (data.navigation || {}) as Row;
+  const hero = (data.hero || {}) as Row;
+  const announcement = (data.announcement || {}) as Row;
+  const design = (data.design || {}) as Row;
+  const meta = (data.meta || {}) as Row;
+  const labels = (data.labels || {}) as Row;
+  const utilityLinks = (hero.utilityLinks as Row[]) || [];
+
+  const rewriter = new HTMLRewriter()
+    .on("title", new SetText(String(site.browserTitle || site.name || "American Full Fighting Bons en Chablais")))
+    .on('meta[name="description"]', new SetAttr("content", meta.description as string))
+    .on('meta[name="keywords"]', new SetAttr("content", meta.keywords as string))
+    .on('meta[property="og:title"]', new SetAttr("content", site.name as string))
+    .on('meta[property="og:description"]', new SetAttr("content", meta.description as string))
+    .on('meta[property="og:image"]', new SetAttr("content", design.logoUrl as string))
+    .on('meta[property="og:url"]', new SetAttr("content", publicUrl))
+    .on('meta[name="twitter:title"]', new SetAttr("content", site.name as string))
+    .on('meta[name="twitter:description"]', new SetAttr("content", meta.description as string))
+    .on("#site-canonical", new SetAttr("href", publicUrl))
+    .on("#site-favicon", new SetAttr("href", design.faviconUrl as string))
+    .on("#site-jsonld", new SetText(JSON.stringify(buildJsonLd(data, publicUrl), null, 2)))
+    .on("#brand-logo", new SetAttr("src", design.logoUrl as string))
+    .on("#brand-primary", new SetText(site.brandPrimary as string))
+    .on("#brand-secondary", new SetText(site.brandSecondary as string))
+    .on("#nav-club", new SetLink(navigation.clubLabel as string, "#club", navigation.clubEnabled !== false))
+    .on("#nav-schedule", new SetLink(navigation.scheduleLabel as string, "#planning", navigation.scheduleEnabled !== false))
+    .on("#nav-pricing", new SetLink(navigation.pricingLabel as string, "#tarifs", navigation.pricingEnabled !== false))
+    .on("#nav-contact", new SetLink(navigation.contactLabel as string, "#contact", navigation.contactEnabled !== false))
+    .on("#nav-inscription", new SetLink(navigation.inscriptionLabel as string, navigation.inscriptionHref as string, navigation.inscriptionEnabled !== false))
+    .on("#nav-calendar", new SetLink(navigation.calendarLabel as string, navigation.calendarHref as string, navigation.calendarEnabled !== false))
+    .on("#nav-shop", new SetLink(navigation.shopLabel as string, navigation.shopHref as string, navigation.shopEnabled !== false))
+    .on("#hero-kicker", new SetText(hero.kicker as string))
+    .on("#hero-title", new SetText(hero.title as string))
+    .on("#hero-body", new SetText(hero.body as string))
+    .on("#hero-primary", new SetLink(hero.primaryLabel as string, hero.primaryHref as string, hero.primaryEnabled !== false))
+    .on("#hero-secondary", new SetLink(hero.secondaryLabel as string, hero.secondaryHref as string, hero.secondaryEnabled !== false))
+    .on("#hero-stats", new SetHtml(renderHeroStatsHtml(data)))
+    .on("#hero-utility-1", new SetLink(utilityLinks[0]?.label as string, utilityLinks[0]?.href as string, utilityLinks[0]?.enabled !== false))
+    .on("#hero-utility-2", new SetLink(utilityLinks[1]?.label as string, utilityLinks[1]?.href as string, utilityLinks[1]?.enabled !== false))
+    .on("#hero-utility-3", new SetLink(utilityLinks[2]?.label as string, utilityLinks[2]?.href as string, utilityLinks[2]?.enabled !== false))
+    .on("#inpi-note", new SetText(data.inpiNote as string))
+    .on("#announcement-badge", new SetText(announcement.badge as string))
+    .on("#announcement-title", new SetText(announcement.title as string))
+    .on("#announcement-body", new SetText(announcement.body as string))
+    .on("#contact-email-title", new SetText(labels.contactEmailTitle as string))
+    .on("#contact-phone-title", new SetText(labels.contactPhoneTitle as string))
+    .on("#contact-address-title", new SetText(labels.contactAddressTitle as string))
+    .on("#site-email", new SetLink(site.email as string, site.email ? `mailto:${site.email}` : ""))
+    .on("#site-phone", new SetLink(site.phone as string, phoneHrefServer(site.phone)))
+    .on("#site-address", new SetText(site.address as string))
+    .on("#partner-links-top", new SetHtml(renderTopLinksHtml(data)))
+    .on("#page-sections", new SetHtml(renderSectionsHtml(data)))
+    .on("#footer-note", new SetText(site.footerNote as string))
+    .on("#footer-legal", new SetText((data.footer as Row)?.legal as string))
+    .on("#footer-meta", new SetText((data.footer as Row)?.meta as string))
+    .on("#social-links", new SetHtml(renderSocialLinksHtml(data)));
+
+  return rewriter.transform(base);
 }
 
 export default {
@@ -1500,6 +1634,13 @@ export default {
       } catch (caught) {
         const message = caught instanceof Error ? caught.message : "Erreur interne";
         response = message === "Unauthorized" ? error(message, 401, request) : error(message, 500, request);
+      }
+    } else if ((request.method === "GET" || request.method === "HEAD") && (url.pathname === "/" || url.pathname === "/index.html")) {
+      try {
+        response = await renderHomepage(request, env);
+      } catch (caught) {
+        console.error("SSR homepage error", caught);
+        response = await env.ASSETS.fetch(request);
       }
     } else {
       response = await env.ASSETS.fetch(request);
