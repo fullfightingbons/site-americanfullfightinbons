@@ -395,7 +395,13 @@ window.addEventListener("DOMContentLoaded", async () => {
     setLink("hero-secondary", data.hero.secondaryLabel, data.hero.secondaryHref);
     renderHeroStats(data);
     renderTopLinks(data);
-    renderSections(data);
+    try {
+      renderSections(data);
+    } catch (sectionError) {
+      // Une section mal formée ne doit pas empêcher le pied de page, le
+      // carrousel et les formulaires (contact, don) de s'initialiser.
+      console.error("Erreur de rendu des sections", sectionError);
+    }
     renderFooter(data);
     initGalleryCarousels();
     bindContactForm();

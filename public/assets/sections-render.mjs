@@ -174,16 +174,16 @@ function renderSpotlightSection(data, section) {
           <div class="section-tag">${escapeHtml(section.title || "À la une")}</div>
           <h2>${escapeHtml(section.subtitle || "Stage, actualité ou message fort du club.")}</h2>
         </div>
-        <p>${escapeHtml(data.spotlight.intro || "Les rendez-vous importants de la saison sont mis en avant ici pour rester visibles au premier coup d'oeil.")}</p>
+        <p>${escapeHtml(data.spotlight?.intro || "Les rendez-vous importants de la saison sont mis en avant ici pour rester visibles au premier coup d'oeil.")}</p>
       </div>
       <article class="spotlight-card">
         <div class="spotlight-content">
-          <div class="spotlight-date">${escapeHtml(data.spotlight.date)}</div>
-          <h3>${escapeHtml(data.spotlight.title)}</h3>
-          <p>${escapeHtml(data.spotlight.body)}</p>
+          <div class="spotlight-date">${escapeHtml(data.spotlight?.date)}</div>
+          <h3>${escapeHtml(data.spotlight?.title)}</h3>
+          <p>${escapeHtml(data.spotlight?.body)}</p>
           <div class="spotlight-actions">
-            ${data.spotlight.primaryEnabled !== false && data.spotlight.primaryHref ? `<a class="btn btn-red" href="${escapeHtml(safeHref(data.spotlight.primaryHref))}">${escapeHtml(data.spotlight.primaryLabel || "Ouvrir")}</a>` : ""}
-            ${data.spotlight.secondaryEnabled !== false && data.spotlight.secondaryHref ? `<a class="btn btn-dark" href="${escapeHtml(safeHref(data.spotlight.secondaryHref))}">${escapeHtml(data.spotlight.secondaryLabel || "Ouvrir")}</a>` : ""}
+            ${data.spotlight?.primaryEnabled !== false && data.spotlight?.primaryHref ? `<a class="btn btn-red" href="${escapeHtml(safeHref(data.spotlight.primaryHref))}">${escapeHtml(data.spotlight.primaryLabel || "Ouvrir")}</a>` : ""}
+            ${data.spotlight?.secondaryEnabled !== false && data.spotlight?.secondaryHref ? `<a class="btn btn-dark" href="${escapeHtml(safeHref(data.spotlight.secondaryHref))}">${escapeHtml(data.spotlight.secondaryLabel || "Ouvrir")}</a>` : ""}
           </div>
         </div>
       </article>
@@ -539,8 +539,8 @@ function renderSponsorSection(data, section) {
         <p>${escapeHtml(data.sponsor?.intro || "Le soutien des adhérents, proches et partenaires aide le club à mieux équiper ses pratiquants et à accompagner ses projets.")}</p>
       </div>
       <article class="sponsor-card">
-        <h3>${escapeHtml(data.sponsor.title)}</h3>
-        <p>${escapeHtml(data.sponsor.body)}</p>
+        <h3>${escapeHtml(data.sponsor?.title)}</h3>
+        <p>${escapeHtml(data.sponsor?.body)}</p>
         ${data.sponsor?.checkoutEnabled ? `
           <form id="donation-form" class="donation-form">
             <div class="donation-presets">
@@ -553,13 +553,13 @@ function renderSponsorSection(data, section) {
               <label><span>${escapeHtml(data.labels?.sponsorEmail || "E-mail")}</span><input type="email" name="email" required></label>
             </div>
             <div class="spotlight-actions">
-              <button class="btn btn-red" type="submit">${escapeHtml(data.sponsor.ctaLabel || "Faire un don")}</button>
+              <button class="btn btn-red" type="submit">${escapeHtml(data.sponsor?.ctaLabel || "Faire un don")}</button>
             </div>
             <p id="donation-status" class="form-status"></p>
           </form>
         ` : `
           <div class="spotlight-actions">
-            ${data.sponsor.ctaHref ? `<a class="btn btn-red" href="${escapeHtml(safeHref(data.sponsor.ctaHref))}">${escapeHtml(data.sponsor.ctaLabel || "Ouvrir")}</a>` : ""}
+            ${data.sponsor?.ctaHref ? `<a class="btn btn-red" href="${escapeHtml(safeHref(data.sponsor.ctaHref))}">${escapeHtml(data.sponsor.ctaLabel || "Ouvrir")}</a>` : ""}
           </div>
         `}
       </article>
