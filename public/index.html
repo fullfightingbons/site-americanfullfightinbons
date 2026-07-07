@@ -171,6 +171,7 @@
   <script id="site-jsonld" type="application/ld+json">{}</script>
 
   <!-- Ré-ouvrir le bandeau de consentement cookies depuis le footer -->
+  <!-- Forme recommandée par Google (support.google.com/admanager/answer/10114217) -->
   <script>
     (function () {
       var link = document.getElementById('footer-cookie-settings');
@@ -178,13 +179,7 @@
       link.addEventListener('click', function () {
         window.googlefc = window.googlefc || {};
         window.googlefc.callbackQueue = window.googlefc.callbackQueue || [];
-        window.googlefc.callbackQueue.push({
-          CONSENT_DATA_READY: function () {
-            if (window.googlefc.showRevocationMessage) {
-              window.googlefc.showRevocationMessage();
-            }
-          },
-        });
+        window.googlefc.callbackQueue.push(window.googlefc.showRevocationMessage);
       });
     })();
   </script>
