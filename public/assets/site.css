@@ -998,6 +998,25 @@ select:focus-visible{
   letter-spacing:.1em;
   text-transform:uppercase;
 }
+.footer-cookie-link{
+  display:inline-block;
+  margin-top:.3rem;
+  padding:0;
+  border:none;
+  background:none;
+  color:rgba(255,255,255,.42);
+  font:inherit;
+  font-size:.8rem;
+  letter-spacing:.04em;
+  text-transform:none;
+  text-decoration:underline;
+  text-underline-offset:3px;
+  cursor:pointer;
+}
+.footer-cookie-link:hover,
+.footer-cookie-link:focus-visible{
+  color:var(--gold);
+}
 @media (max-width: 1080px){
   .hero-inner,.story-grid,.contact-wrap,.section-head{grid-template-columns:1fr}
   .hero{
