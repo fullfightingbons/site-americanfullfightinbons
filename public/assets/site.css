@@ -1017,6 +1017,20 @@ select:focus-visible{
 .footer-cookie-link:focus-visible{
   color:var(--gold);
 }
+.footer-legal-links{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:.5rem;
+  flex-wrap:wrap;
+}
+.footer-legal-links .footer-cookie-link{
+  margin-top:0;
+}
+.footer-legal-sep{
+  color:rgba(255,255,255,.24);
+  font-size:.8rem;
+}
 @media (max-width: 1080px){
   .hero-inner,.story-grid,.contact-wrap,.section-head{grid-template-columns:1fr}
   .hero{
