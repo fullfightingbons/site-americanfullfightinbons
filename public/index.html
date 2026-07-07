@@ -6,6 +6,30 @@
 
   <title>American Full Fighting Bons en Chablais</title>
 
+  <!-- Google Funding Choices (bandeau de consentement RGPD/CNIL) -->
+  <!-- Ce script doit être généré dans AdSense > Confidentialité et messages > créer un message RGPD.
+       Il affiche lui-même le bandeau et transmet le consentement à Google Ads/AdSense :
+       il n'y a rien d'autre à coder côté site pour la conformité. -->
+  <script async src="https://fundingchoicesmessages.google.com/i/pub-6032679277516030?ers=1"></script>
+  <script>
+    (function () {
+      function signalGooglefcPresent() {
+        if (!window.frames['googlefcPresent']) {
+          if (document.body) {
+            var iframe = document.createElement('iframe');
+            iframe.style = 'width:0;height:0;border:none;z-index:-1000;left:-1000px;top:-1000px;';
+            iframe.style.display = 'none';
+            iframe.name = 'googlefcPresent';
+            document.body.appendChild(iframe);
+          } else {
+            setTimeout(signalGooglefcPresent, 0);
+          }
+        }
+      }
+      signalGooglefcPresent();
+    })();
+  </script>
+
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6032679277516030"
      crossorigin="anonymous"></script>
 
@@ -138,12 +162,32 @@
       <div id="footer-legal" class="site-footer-legal"></div>
       <div id="footer-meta" class="site-footer-meta"></div>
       <div id="social-links" class="footer-socials" hidden></div>
+      <button type="button" id="footer-cookie-settings" class="footer-cookie-link">Gérer les cookies</button>
     </div>
   </footer>
 
   <!-- JS -->
   <script type="module" src="/assets/site.js"></script>
   <script id="site-jsonld" type="application/ld+json">{}</script>
+
+  <!-- Ré-ouvrir le bandeau de consentement cookies depuis le footer -->
+  <script>
+    (function () {
+      var link = document.getElementById('footer-cookie-settings');
+      if (!link) return;
+      link.addEventListener('click', function () {
+        window.googlefc = window.googlefc || {};
+        window.googlefc.callbackQueue = window.googlefc.callbackQueue || [];
+        window.googlefc.callbackQueue.push({
+          CONSENT_DATA_READY: function () {
+            if (window.googlefc.showRevocationMessage) {
+              window.googlefc.showRevocationMessage();
+            }
+          },
+        });
+      });
+    })();
+  </script>
 
   <!-- Menu mobile premium -->
   <script>
