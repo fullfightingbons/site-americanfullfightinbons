@@ -114,6 +114,8 @@ function applyStaticContent(data) {
   setVisible("nav-calendar", data.navigation?.calendarEnabled !== false);
   setLink("nav-shop", data.navigation?.shopLabel, data.navigation?.shopHref);
   setVisible("nav-shop", data.navigation?.shopEnabled !== false);
+  setLink("nav-membre", data.navigation?.membreLabel, data.navigation?.membreHref);
+  setVisible("nav-membre", data.navigation?.membreEnabled !== false);
 
   setLink("hero-primary", data.hero?.primaryLabel, data.hero?.primaryHref);
   setVisible("hero-primary", data.hero?.primaryEnabled !== false);
