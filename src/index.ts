@@ -454,6 +454,9 @@ function publicResponseSettings(settings: Record<string, string>, env: Env): Rec
     nav_shop_label: settings.nav_shop_label || "Boutique",
     nav_shop_href: settings.nav_shop_href || "https://boutique.americanfullfightingbons.fr/",
     nav_shop_enabled: settings.nav_shop_enabled || "1",
+    nav_membre_label: settings.nav_membre_label || "Espace membre",
+    nav_membre_href: settings.nav_membre_href || "https://espace-membre.americanfullfightingbons.fr/",
+    nav_membre_enabled: settings.nav_membre_enabled || "1",
     quick_links_cta_label: settings.quick_links_cta_label || "Accéder",
     browser_title: settings.browser_title || settings.club_name || env.SITE_NAME || "American Full Fighting Bons en Chablais",
     hero_kicker: settings.hero_kicker || "",
@@ -869,6 +872,9 @@ async function getBootstrap(env: Env): Promise<Row> {
       shopLabel: settings.nav_shop_label,
       shopHref: settings.nav_shop_href,
       shopEnabled: parseBooleanSetting(settings.nav_shop_enabled),
+      membreLabel: settings.nav_membre_label,
+      membreHref: settings.nav_membre_href,
+      membreEnabled: parseBooleanSetting(settings.nav_membre_enabled),
     },
     labels: {
       quickLinkCta: settings.quick_links_cta_label,
@@ -1595,6 +1601,7 @@ async function renderHomepage(request: Request, env: Env): Promise<Response> {
     .on("#nav-inscription", new SetLink(navigation.inscriptionLabel as string, navigation.inscriptionHref as string, navigation.inscriptionEnabled !== false))
     .on("#nav-calendar", new SetLink(navigation.calendarLabel as string, navigation.calendarHref as string, navigation.calendarEnabled !== false))
     .on("#nav-shop", new SetLink(navigation.shopLabel as string, navigation.shopHref as string, navigation.shopEnabled !== false))
+    .on("#nav-membre", new SetLink(navigation.membreLabel as string, navigation.membreHref as string, navigation.membreEnabled !== false))
     .on("#hero-kicker", new SetText(hero.kicker as string))
     .on("#hero-title", new SetText(hero.title as string))
     .on("#hero-body", new SetText(hero.body as string))
