@@ -195,6 +195,9 @@ const ALLOWED_ORIGINS = new Set([
   "https://gestion.americanfullfightingbons.fr",
   "https://boutique.americanfullfightingbons.fr",
   "https://calendrier.americanfullfightingbons.fr",
+  // espace-membre affiche le fil d'actualités du club en cross-origin via
+  // /api/bootstrap (lecture publique, aucune donnée sensible exposée ici).
+  "https://espace-membre.americanfullfightingbons.fr",
 ]);
 
 function withHeaders(response: Response, request?: Request): Response {
