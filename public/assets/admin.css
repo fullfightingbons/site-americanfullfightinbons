@@ -1423,6 +1423,14 @@
   .vb-topbar-right .vb-topbar-btn:not(#logout-button) {
     display: none;
   }
+
+  /* Empêche le zoom automatique d'iOS Safari au focus (nécessite >=16px) */
+  .vb-field-input,
+  .vb-field-textarea,
+  .premium-field input,
+  .premium-field textarea {
+    font-size: 16px;
+  }
 }
 
 /* ─── Compat anciens admin.css ───────────────────────────── */
