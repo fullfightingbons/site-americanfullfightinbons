@@ -1046,6 +1046,7 @@ async function handleContact(request: Request, env: Env): Promise<Response> {
   if (website) return ok({ spam: true });
   if (fullName.length < 3) return error("Le nom est trop court.");
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return error("Adresse e-mail invalide.");
+  if (!/^[0-9+()\s.-]{6,}$/.test(phone)) return error("Numéro de téléphone invalide.");
   if (message.length < 10) return error("Le message est trop court.");
 
   const ip = request.headers.get("cf-connecting-ip") ?? "";

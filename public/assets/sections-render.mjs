@@ -629,7 +629,7 @@ function renderContactSection(data, section) {
             <input type="text" name="website" hidden>
             <label><span>${escapeHtml(data.contactForm?.nameLabel || "Nom")}</span><input type="text" name="fullName" required></label>
             <label><span>${escapeHtml(data.contactForm?.emailLabel || "E-mail")}</span><input type="email" name="email" required></label>
-            <label><span>${escapeHtml(data.contactForm?.phoneLabel || "Téléphone")}</span><input type="text" name="phone"></label>
+            <label><span>${escapeHtml(data.contactForm?.phoneLabel || "Téléphone")}</span><input type="tel" name="phone" required></label>
             <label><span>${escapeHtml(data.contactForm?.messageLabel || "Message")}</span><textarea name="message" rows="6" required></textarea></label>
             <button class="btn btn-red" type="submit">${escapeHtml(data.contactForm?.submitLabel || "Envoyer")}</button>
             <p id="form-status" class="form-status"></p>
