@@ -1,20 +1,20 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 [hidden]{display:none!important}
 :root{
-  --sand:#f5efe4;
-  --sand-strong:#eadfc9;
-  --ink:#0f1720;
+  --cream:#f5efe4;
+  --cream-deep:#eadfc9;
+  --ink-strong:#0f1720;
   --ink-soft:#253242;
-  --night:#07111d;
-  --night-2:#102033;
+  --navy:#07111d;
+  --navy-soft:#102033;
   --paper:#fffdf9;
   --line:rgba(15,23,32,.1);
   --line-strong:rgba(15,23,32,.16);
-  --accent:#d84a2f;
-  --accent-deep:#9f2413;
-  --accent-wash:rgba(216,74,47,.12);
+  --red:#d84a2f;
+  --red-dark:#9f2413;
+  --red-wash:rgba(216,74,47,.12);
   --gold:#d6ac54;
-  --text:#1a2430;
+  --ink:#1a2430;
   --muted:#607080;
   --white:#ffffff;
   --radius:24px;
@@ -38,7 +38,7 @@ body{
     var(--site-ambient-image) center top/cover fixed no-repeat,
     radial-gradient(circle at top left,rgba(214,172,84,.16),transparent 28%),
     linear-gradient(180deg,#f8f3ea 0%,#f6f1e7 34%,#fbfaf6 100%);
-  color:var(--text);
+  color:var(--ink);
 }
 a{text-decoration:none;color:inherit}
 img{display:block;max-width:100%}
@@ -51,7 +51,7 @@ img{display:block;max-width:100%}
   padding:.75rem 1rem;
   border-radius:999px;
   background:var(--white);
-  color:var(--ink);
+  color:var(--ink-strong);
   font-weight:800;
   box-shadow:0 14px 34px rgba(7,17,29,.2);
   transition:transform .18s ease;
@@ -153,7 +153,7 @@ select:focus-visible{
   height:2px;
   transform:scaleX(0);
   transform-origin:left;
-  background:linear-gradient(90deg,var(--gold),var(--accent));
+  background:linear-gradient(90deg,var(--gold),var(--red));
   transition:transform .25s ease;
 }
 .main-nav a:hover{color:var(--white)}
@@ -264,7 +264,7 @@ select:focus-visible{
 }
 .btn:hover{transform:translateY(-1px)}
 .btn-red{
-  background:linear-gradient(135deg,#e36443 0%,var(--accent-deep) 100%);
+  background:linear-gradient(135deg,#e36443 0%,var(--red-dark) 100%);
   color:var(--white);
   box-shadow:0 16px 34px rgba(159,36,19,.28);
 }
@@ -435,7 +435,7 @@ select:focus-visible{
   display:inline-flex;
   margin-top:1rem;
   font-weight:700;
-  color:var(--accent-deep);
+  color:var(--red-dark);
 }
 .section-shell{max-width:1180px;margin:0 auto;padding:5rem 1.6rem 0}
 .section-head{
@@ -451,7 +451,7 @@ select:focus-visible{
   font-weight:800;
   letter-spacing:.15em;
   text-transform:uppercase;
-  color:var(--accent-deep);
+  color:var(--red-dark);
 }
 .section-head h2{
   font-family:var(--font-display);
@@ -494,8 +494,8 @@ select:focus-visible{
   gap:.5rem;
   padding:.45rem .75rem;
   border-radius:999px;
-  background:var(--accent-wash);
-  color:var(--accent-deep);
+  background:var(--red-wash);
+  color:var(--red-dark);
   font-size:.76rem;
   font-weight:700;
   letter-spacing:.08em;
@@ -513,8 +513,8 @@ select:focus-visible{
   min-height:28px;
   padding:0 .72rem;
   border-radius:999px;
-  background:var(--accent-wash);
-  color:var(--accent-deep);
+  background:var(--red-wash);
+  color:var(--red-dark);
   font-size:.73rem;
   font-weight:800;
   letter-spacing:.12em;
@@ -556,12 +556,12 @@ select:focus-visible{
   border-radius:18px;
   aspect-ratio:1/1;
   object-fit:cover;
-  background:var(--sand-strong);
+  background:var(--cream-deep);
 }
 .highlight-card .btn-dark{
   margin-top:1rem;
   width:max-content;
-  color:var(--ink);
+  color:var(--ink-strong);
   background:transparent;
   border:1px solid var(--line-strong);
 }
@@ -627,7 +627,7 @@ select:focus-visible{
   height:46px;
   border:none;
   border-radius:50%;
-  background:var(--ink);
+  background:var(--ink-strong);
   color:var(--white);
   font:700 1.2rem/1 var(--font-body);
   cursor:pointer;
@@ -650,12 +650,12 @@ select:focus-visible{
 }
 .gallery-dot.is-active{
   width:30px;
-  background:linear-gradient(90deg,var(--gold),var(--accent));
+  background:linear-gradient(90deg,var(--gold),var(--red));
 }
 .spotlight-card{
   position:relative;
   padding:2rem;
-  background:linear-gradient(135deg,var(--night) 0%,#17283d 100%);
+  background:linear-gradient(135deg,var(--navy) 0%,#17283d 100%);
   color:var(--white);
   border-color:rgba(255,255,255,.05);
   overflow:hidden;
@@ -716,7 +716,7 @@ select:focus-visible{
   border:1px solid var(--line-strong);
   border-radius:999px;
   background:#fffefb;
-  color:var(--ink);
+  color:var(--ink-strong);
   font:700 .86rem var(--font-body);
   cursor:pointer;
 }
@@ -743,7 +743,7 @@ select:focus-visible{
   border:1px solid var(--line-strong);
   border-radius:18px;
   background:#fffefb;
-  color:var(--text);
+  color:var(--ink);
   font:inherit;
 }
 .card-media{
@@ -751,7 +751,7 @@ select:focus-visible{
   margin-bottom:.8rem;
   border-radius:18px;
   aspect-ratio:1.35/1;
-  background:var(--sand-strong);
+  background:var(--cream-deep);
 }
 .card-media.is-cover{
   object-fit:cover;
@@ -791,7 +791,7 @@ select:focus-visible{
   display:inline-flex;
   margin-top:1rem;
   font-weight:800;
-  color:var(--accent-deep);
+  color:var(--red-dark);
 }
 .faq-card summary{
   cursor:pointer;
@@ -800,14 +800,14 @@ select:focus-visible{
   font-size:1.28rem;
   font-weight:700;
   line-height:1.15;
-  color:var(--ink);
+  color:var(--ink-strong);
 }
 .faq-card summary::-webkit-details-marker{display:none}
 .faq-card summary::after{
   content:"+";
   float:right;
   margin-left:1rem;
-  color:var(--accent-deep);
+  color:var(--red-dark);
 }
 .faq-card[open] summary::after{content:"-"}
 .testimonial-photo{
@@ -815,7 +815,7 @@ select:focus-visible{
   height:72px;
   margin-bottom:1rem;
   border-radius:50%;
-  background:var(--sand-strong);
+  background:var(--cream-deep);
 }
 .testimonial-photo.is-cover{object-fit:cover}
 .testimonial-photo.is-contain{
@@ -839,7 +839,7 @@ select:focus-visible{
   margin-top:1.4rem;
 }
 .section-actions .btn-dark{
-  color:var(--ink);
+  color:var(--ink-strong);
   background:transparent;
   border:1px solid var(--line-strong);
 }
@@ -879,7 +879,7 @@ select:focus-visible{
 .custom-block img{
   width:100%;
   height:var(--custom-block-height);
-  background:var(--sand-strong);
+  background:var(--cream-deep);
 }
 .custom-block img.is-cover{object-fit:cover}
 .custom-block img.is-contain{
@@ -894,7 +894,7 @@ select:focus-visible{
 }
 .custom-block-copy h3{
   font-family:var(--font-display);
-  color:var(--ink);
+  color:var(--ink-strong);
 }
 .custom-block-copy p{
   color:var(--muted);
@@ -941,7 +941,7 @@ select:focus-visible{
   border:1px solid var(--line-strong);
   border-radius:18px;
   background:#fffefb;
-  color:var(--text);
+  color:var(--ink);
   font:inherit;
 }
 .contact-form input:focus,.contact-form textarea:focus{
@@ -957,7 +957,7 @@ select:focus-visible{
 .site-footer{
   margin-top:4rem;
   padding:2rem 1rem 2.4rem;
-  background:var(--night);
+  background:var(--navy);
   color:rgba(255,255,255,.56);
   font-size:.82rem;
   letter-spacing:.08em;
