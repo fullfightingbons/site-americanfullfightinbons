@@ -1588,6 +1588,22 @@ interface CalendrierEvent {
   poster_url?: string | null;
 }
 
+const CALENDAR_ORIGIN = "https://calendrier.americanfullfightingbons.fr";
+
+/**
+ * L'API calendrier renvoie poster_url sous forme de chemin relatif
+ * (ex: "/posters/xxx.jpg"), valide uniquement sur le domaine du calendrier.
+ * Utilisé tel quel dans une page servie par le site principal, ce chemin
+ * pointe vers americanfullfightingbons.fr/posters/xxx.jpg (inexistant) et
+ * casse à la fois l'affichage (image vide) et le redimensionnement Cloudflare
+ * (cfImageSrcset le classe alors — à tort — comme une image "own zone" du
+ * site principal). On le transforme donc en URL absolue vers le calendrier.
+ */
+function absolutizeCalendarUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  return url.startsWith("/") ? `${CALENDAR_ORIGIN}${url}` : url;
+}
+
 async function fetchUpcomingEvents(): Promise<CalendrierEvent[]> {
   try {
     const response = await fetch("https://calendrier.americanfullfightingbons.fr/api/events", {
@@ -1596,7 +1612,9 @@ async function fetchUpcomingEvents(): Promise<CalendrierEvent[]> {
     if (!response.ok) return [];
     const events = (await response.json()) as CalendrierEvent[];
     if (!Array.isArray(events)) return [];
-    return events.filter((ev) => !ev.is_grade && ev.status !== "ferme").slice(0, 3);
+    return events
+      .filter((ev) => !ev.is_grade && ev.status !== "ferme")
+      .map((ev) => ({ ...ev, poster_url: absolutizeCalendarUrl(ev.poster_url) }));
   } catch {
     return [];
   }
@@ -1619,8 +1637,12 @@ function renderUpcomingEventsHtml(events: CalendrierEvent[]): string {
   return events
     .map((ev) => {
       const srcset = ev.poster_url ? cfImageSrcset(ev.poster_url, [300, 600]) : null;
+      // Si aucune affiche n'est renseignée dans le calendrier, on affiche le
+      // médaillon de repli (gant). Si une affiche EST renseignée mais que le
+      // fichier ne charge pas (supprimé, lien cassé...), onerror bascule sur
+      // le même médaillon plutôt que de laisser un cadre vide.
       const posterHtml = ev.poster_url
-        ? `<img class="upcoming-event-poster" src="${escapeHtmlText(ev.poster_url)}"${srcset ? ` srcset="${escapeHtmlText(srcset)}" sizes="300px"` : ""} alt="" loading="lazy" decoding="async">`
+        ? `<img class="upcoming-event-poster" src="${escapeHtmlText(ev.poster_url)}"${srcset ? ` srcset="${escapeHtmlText(srcset)}" sizes="300px"` : ""} alt="" loading="lazy" decoding="async" onerror="this.outerHTML='&lt;div class=&quot;upcoming-event-poster upcoming-event-poster-fallback&quot; aria-hidden=&quot;true&quot;&gt;🥊&lt;/div&gt;'">`
         : `<div class="upcoming-event-poster upcoming-event-poster-fallback" aria-hidden="true">🥊</div>`;
       const priceTxt = ev.price && Number(ev.price) > 0 ? `${Number(ev.price).toFixed(0)} €` : "Gratuit";
       const complet = ev.status === "complet";
@@ -1642,7 +1664,7 @@ function renderUpcomingEventsHtml(events: CalendrierEvent[]): string {
 
 
 async function renderHomepage(request: Request, env: Env): Promise<Response> {
-  const [data, base, upcomingEvents] = await Promise.all([
+  const [data, base, upcomingEventsRaw] = await Promise.all([
     getBootstrap(env),
     env.ASSETS.fetch(request),
     fetchUpcomingEvents(),
@@ -1657,7 +1679,24 @@ async function renderHomepage(request: Request, env: Env): Promise<Response> {
   const design = (data.design || {}) as Row;
   const meta = (data.meta || {}) as Row;
   const labels = (data.labels || {}) as Row;
+  const spotlight = (data.spotlight || {}) as Row;
   const utilityLinks = (hero.utilityLinks as Row[]) || [];
+
+  // La section "À la une" (spotlight) est renseignée manuellement dans
+  // l'admin et peut donc mettre en avant le même évènement que celui déjà
+  // remonté automatiquement depuis le calendrier. On évite ce doublon en
+  // retirant de la liste "Prochainement au club" l'évènement qui correspond
+  // au titre (et, si renseignée, à la date) actuellement mis en avant.
+  const spotlightTitle = String(spotlight.title || "").trim().toLowerCase();
+  const spotlightDate = String(spotlight.date || "").trim();
+  const upcomingEvents = upcomingEventsRaw
+    .filter((ev) => {
+      if (!spotlightTitle) return true;
+      const sameTitle = ev.title.trim().toLowerCase() === spotlightTitle;
+      const sameDate = !spotlightDate || ev.date_start === spotlightDate;
+      return !(sameTitle && sameDate);
+    })
+    .slice(0, 3);
 
   const rewriter = new HTMLRewriter()
     .on("title", new SetText(String(site.browserTitle || site.name || "American Full Fighting Bons en Chablais")))

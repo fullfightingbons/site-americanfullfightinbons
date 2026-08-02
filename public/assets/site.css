@@ -496,6 +496,7 @@ select:focus-visible{
   display:flex;
   flex-direction:column;
   overflow:hidden;
+  min-width:0;
   text-decoration:none;
   color:inherit;
   transition:transform .15s,box-shadow .15s;
@@ -517,7 +518,7 @@ select:focus-visible{
   font-size:2.2rem;
   background:linear-gradient(135deg,var(--navy),var(--navy-soft));
 }
-.upcoming-event-body{padding:1.2rem 1.3rem 1.4rem}
+.upcoming-event-body{padding:1.2rem 1.3rem 1.4rem;min-width:0}
 .upcoming-event-date{
   font-size:.78rem;
   font-weight:800;
@@ -540,15 +541,20 @@ select:focus-visible{
 }
 .upcoming-event-meta{
   display:flex;
+  flex-wrap:wrap;
   align-items:center;
   justify-content:space-between;
-  gap:10px;
+  gap:6px 10px;
   font-size:.85rem;
   color:var(--muted);
   border-top:1px solid var(--line);
   padding-top:.75rem;
 }
-.upcoming-event-price{font-weight:800;color:var(--ink)}
+.upcoming-event-meta>span:first-child{
+  min-width:0;
+  overflow-wrap:anywhere;
+}
+.upcoming-event-price{font-weight:800;color:var(--ink);white-space:nowrap}
 .upcoming-event-price.upcoming-event-complet{color:var(--red-dark)}
 @media(max-width:640px){
   .upcoming-events-all{justify-self:start}
