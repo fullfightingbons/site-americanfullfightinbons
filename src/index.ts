@@ -4,6 +4,7 @@ import {
   renderSocialLinksHtml,
   renderSectionsHtml,
   buildJsonLd,
+  cfImageSrcset,
 } from "../public/assets/sections-render.mjs";
 
 interface Env {
@@ -1566,8 +1567,86 @@ function phoneHrefServer(value: unknown): string {
   return phone ? `tel:${phone}` : "";
 }
 
+/**
+ * ─── Prochains évènements (calendrier.americanfullfightingbons.fr) ──────
+ * Récupère les prochains évènements publics via l'API de calendrier (même
+ * zone Cloudflare, donc appel serveur-à-serveur direct sans CORS à gérer)
+ * pour les afficher sur la home. Best-effort : si calendrier est
+ * injoignable ou lent, on n'attend pas indéfiniment et on retombe sur un
+ * message de repli plutôt que de faire échouer toute la page d'accueil.
+ */
+interface CalendrierEvent {
+  id: string;
+  title: string;
+  sub?: string;
+  date_start: string;
+  time_start?: string;
+  lieu?: string;
+  price?: number;
+  status: string;
+  is_grade?: boolean;
+  poster_url?: string | null;
+}
+
+async function fetchUpcomingEvents(): Promise<CalendrierEvent[]> {
+  try {
+    const response = await fetch("https://calendrier.americanfullfightingbons.fr/api/events", {
+      signal: AbortSignal.timeout(3000),
+    });
+    if (!response.ok) return [];
+    const events = (await response.json()) as CalendrierEvent[];
+    if (!Array.isArray(events)) return [];
+    return events.filter((ev) => !ev.is_grade && ev.status !== "ferme").slice(0, 3);
+  } catch {
+    return [];
+  }
+}
+
+function formatEventDateFr(dateStart: string, timeStart?: string): string {
+  try {
+    const d = new Date(dateStart + (timeStart ? `T${timeStart}` : "T00:00:00"));
+    const formatted = d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" });
+    return timeStart ? `${formatted} · ${timeStart}` : formatted;
+  } catch {
+    return dateStart;
+  }
+}
+
+function renderUpcomingEventsHtml(events: CalendrierEvent[]): string {
+  if (events.length === 0) {
+    return `<p class="upcoming-events-empty">Le calendrier se remplit au fil de la saison — <a href="https://calendrier.americanfullfightingbons.fr/">consultez-le directement</a> pour ne rien manquer.</p>`;
+  }
+  return events
+    .map((ev) => {
+      const srcset = ev.poster_url ? cfImageSrcset(ev.poster_url, [300, 600]) : null;
+      const posterHtml = ev.poster_url
+        ? `<img class="upcoming-event-poster" src="${escapeHtmlText(ev.poster_url)}"${srcset ? ` srcset="${escapeHtmlText(srcset)}" sizes="300px"` : ""} alt="" loading="lazy" decoding="async">`
+        : `<div class="upcoming-event-poster upcoming-event-poster-fallback" aria-hidden="true">🥊</div>`;
+      const priceTxt = ev.price && Number(ev.price) > 0 ? `${Number(ev.price).toFixed(0)} €` : "Gratuit";
+      const complet = ev.status === "complet";
+      return `<a class="upcoming-event-card" href="https://calendrier.americanfullfightingbons.fr/">
+        ${posterHtml}
+        <div class="upcoming-event-body">
+          <div class="upcoming-event-date">${escapeHtmlText(formatEventDateFr(ev.date_start, ev.time_start))}</div>
+          <h3 class="upcoming-event-title">${escapeHtmlText(ev.title)}</h3>
+          ${ev.sub ? `<p class="upcoming-event-sub">${escapeHtmlText(ev.sub)}</p>` : ""}
+          <div class="upcoming-event-meta">
+            ${ev.lieu ? `<span>${escapeHtmlText(ev.lieu)}</span>` : ""}
+            <span class="upcoming-event-price ${complet ? "upcoming-event-complet" : ""}">${complet ? "Complet" : priceTxt}</span>
+          </div>
+        </div>
+      </a>`;
+    })
+    .join("\n");
+}
+
+
 async function renderHomepage(request: Request, env: Env): Promise<Response> {
-  const [data, base] = await Promise.all([getBootstrap(env), env.ASSETS.fetch(request)]);
+  const [data, base, upcomingEvents] = await Promise.all([
+    getBootstrap(env),
+    env.ASSETS.fetch(request),
+    fetchUpcomingEvents(),
+  ]);
   if (!base.ok || !(base.headers.get("content-type") || "").includes("text/html")) return base;
 
   const publicUrl = String(data.sitePublicUrl || new URL(request.url).origin).replace(/\/+$/, "");
@@ -1624,6 +1703,7 @@ async function renderHomepage(request: Request, env: Env): Promise<Response> {
     .on("#site-phone", new SetLink(site.phone as string, phoneHrefServer(site.phone)))
     .on("#site-address", new SetText(site.address as string))
     .on("#partner-links-top", new SetHtml(renderTopLinksHtml(data)))
+    .on("#upcoming-events-list", new SetHtml(renderUpcomingEventsHtml(upcomingEvents)))
     .on("#page-sections", new SetHtml(renderSectionsHtml(data)))
     .on("#footer-note", new SetText(site.footerNote as string))
     .on("#footer-legal", new SetText((data.footer as Row)?.legal as string))

@@ -465,7 +465,7 @@ select:focus-visible{
   color:var(--muted);
   line-height:1.75;
 }
-.story-card,.schedule-card,.team-card,.pricing-card,.highlight-card,.gallery-card,.contact-card,.spotlight-card,.resource-card,.equipment-card,.sponsor-card,.sponsor-partner-card,.news-card,.faq-card,.testimonial-card{
+.story-card,.schedule-card,.team-card,.pricing-card,.highlight-card,.gallery-card,.contact-card,.spotlight-card,.resource-card,.equipment-card,.sponsor-card,.sponsor-partner-card,.news-card,.faq-card,.testimonial-card,.upcoming-event-card{
   border:1px solid var(--line);
   border-radius:var(--radius-lg);
   background:rgba(255,253,249,.92);
@@ -473,6 +473,86 @@ select:focus-visible{
 }
 .story-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:20px}
 .story-card{padding:1.7rem}
+
+.upcoming-events{padding-top:1rem}
+.upcoming-events-all{
+  justify-self:end;
+  font-weight:700;
+  color:var(--red-dark);
+  white-space:nowrap;
+}
+.upcoming-events-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:18px;
+}
+.upcoming-events-empty{
+  color:var(--muted);
+  line-height:1.75;
+  padding:1.5rem 0;
+}
+.upcoming-events-empty a{color:var(--red-dark);font-weight:700}
+.upcoming-event-card{
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  text-decoration:none;
+  color:inherit;
+  transition:transform .15s,box-shadow .15s;
+}
+.upcoming-event-card:hover{transform:translateY(-2px)}
+.upcoming-event-poster{
+  width:100%;
+  aspect-ratio:16/10;
+  object-fit:cover;
+  display:block;
+  background:var(--cream-deep);
+}
+.upcoming-event-poster-fallback{
+  width:100%;
+  aspect-ratio:16/10;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:2.2rem;
+  background:linear-gradient(135deg,var(--navy),var(--navy-soft));
+}
+.upcoming-event-body{padding:1.2rem 1.3rem 1.4rem}
+.upcoming-event-date{
+  font-size:.78rem;
+  font-weight:800;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--red-dark);
+  margin-bottom:.4rem;
+}
+.upcoming-event-title{
+  font-family:var(--font-display);
+  font-size:1.25rem;
+  line-height:1.2;
+  margin:0 0 .35rem;
+}
+.upcoming-event-sub{
+  color:var(--muted);
+  font-size:.92rem;
+  line-height:1.55;
+  margin:0 0 .8rem;
+}
+.upcoming-event-meta{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  font-size:.85rem;
+  color:var(--muted);
+  border-top:1px solid var(--line);
+  padding-top:.75rem;
+}
+.upcoming-event-price{font-weight:800;color:var(--ink)}
+.upcoming-event-price.upcoming-event-complet{color:var(--red-dark)}
+@media(max-width:640px){
+  .upcoming-events-all{justify-self:start}
+}
 .story-card h3{
   font-family:var(--font-display);
   font-size:2rem;
