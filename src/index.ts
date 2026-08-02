@@ -1685,17 +1685,15 @@ async function renderHomepage(request: Request, env: Env): Promise<Response> {
   // La section "À la une" (spotlight) est renseignée manuellement dans
   // l'admin et peut donc mettre en avant le même évènement que celui déjà
   // remonté automatiquement depuis le calendrier. On évite ce doublon en
-  // retirant de la liste "Prochainement au club" l'évènement qui correspond
-  // au titre (et, si renseignée, à la date) actuellement mis en avant.
+  // retirant de la liste "Prochainement au club" l'évènement dont le titre
+  // correspond à celui actuellement mis en avant.
+  // Note : on ne compare pas les dates ici — spotlight_date est un texte
+  // libre destiné à l'affichage (ex: "Le samedi 5 septembre 2026") alors que
+  // ev.date_start est au format ISO (ex: "2026-09-05") ; les deux ne sont
+  // jamais directement comparables telles quelles.
   const spotlightTitle = String(spotlight.title || "").trim().toLowerCase();
-  const spotlightDate = String(spotlight.date || "").trim();
   const upcomingEvents = upcomingEventsRaw
-    .filter((ev) => {
-      if (!spotlightTitle) return true;
-      const sameTitle = ev.title.trim().toLowerCase() === spotlightTitle;
-      const sameDate = !spotlightDate || ev.date_start === spotlightDate;
-      return !(sameTitle && sameDate);
-    })
+    .filter((ev) => !spotlightTitle || ev.title.trim().toLowerCase() !== spotlightTitle)
     .slice(0, 3);
 
   const rewriter = new HTMLRewriter()
