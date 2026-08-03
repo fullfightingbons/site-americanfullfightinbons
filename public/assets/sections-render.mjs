@@ -193,6 +193,71 @@ function renderStorySection(data, section) {
   `;
 }
 
+/**
+ * Formate une date d'évènement calendrier ("2026-10-07" + "19:00") en texte
+ * court lisible ("mer. 7 oct. · 19:00"). Fonction pure (pas de fetch, pas de
+ * DOM) : appelée aussi bien côté Worker (SSR) que côté navigateur.
+ */
+function formatEventDateFr(dateStart, timeStart) {
+  try {
+    const d = new Date(dateStart + (timeStart ? `T${timeStart}` : "T00:00:00"));
+    const formatted = d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" });
+    return timeStart ? `${formatted} · ${timeStart}` : formatted;
+  } catch {
+    return dateStart;
+  }
+}
+
+function renderUpcomingEventsSection(data, section) {
+  const events = data.upcomingEvents || [];
+  const cta = data.upcomingEventsCta || {};
+  // Les cartes individuelles pointent toujours vers le calendrier (source
+  // des évènements), même si le lien du bouton "voir tout" est personnalisé
+  // dans l'admin vers une autre page.
+  const calendarHref = "https://calendrier.americanfullfightingbons.fr/";
+  const listHtml = events.length === 0
+    ? `<p class="upcoming-events-empty">Le calendrier se remplit au fil de la saison — <a href="${escapeHtml(calendarHref)}">consultez-le directement</a> pour ne rien manquer.</p>`
+    : events
+        .map((ev) => {
+          const srcset = ev.poster_url ? cfImageSrcset(ev.poster_url, [300, 600]) : null;
+          // Si aucune affiche n'est renseignée dans le calendrier, on affiche
+          // le médaillon de repli (gant). Si une affiche EST renseignée mais
+          // que le fichier ne charge pas (supprimé, lien cassé...), onerror
+          // bascule sur le même médaillon plutôt que de laisser un cadre vide.
+          const posterHtml = ev.poster_url
+            ? `<img class="upcoming-event-poster" src="${escapeHtml(ev.poster_url)}"${srcset ? ` srcset="${escapeHtml(srcset)}" sizes="300px"` : ""} alt="" loading="lazy" decoding="async" onerror="this.outerHTML='&lt;div class=&quot;upcoming-event-poster upcoming-event-poster-fallback&quot; aria-hidden=&quot;true&quot;&gt;🥊&lt;/div&gt;'">`
+            : `<div class="upcoming-event-poster upcoming-event-poster-fallback" aria-hidden="true">🥊</div>`;
+          const priceTxt = ev.price && Number(ev.price) > 0 ? `${Number(ev.price).toFixed(0)} €` : "Gratuit";
+          const complet = ev.status === "complet";
+          return `<a class="upcoming-event-card" href="${escapeHtml(calendarHref)}">
+            ${posterHtml}
+            <div class="upcoming-event-body">
+              <div class="upcoming-event-date">${escapeHtml(formatEventDateFr(ev.date_start, ev.time_start))}</div>
+              <h3 class="upcoming-event-title">${escapeHtml(ev.title)}</h3>
+              ${ev.sub ? `<p class="upcoming-event-sub">${escapeHtml(ev.sub)}</p>` : ""}
+              <div class="upcoming-event-meta">
+                ${ev.lieu ? `<span>${escapeHtml(ev.lieu)}</span>` : ""}
+                <span class="upcoming-event-price ${complet ? "upcoming-event-complet" : ""}">${complet ? "Complet" : priceTxt}</span>
+              </div>
+            </div>
+          </a>`;
+        })
+        .join("\n");
+
+  return `
+    <section id="upcoming-events" class="section-shell upcoming-events">
+      <div class="section-head">
+        <div>
+          <div class="section-tag">${escapeHtml(section.title || "Agenda du club")}</div>
+          <h2>${escapeHtml(section.subtitle || "Prochainement au club")}</h2>
+        </div>
+        <a href="${escapeHtml(safeHref(cta.href || "https://calendrier.americanfullfightingbons.fr/"))}" class="upcoming-events-all">${escapeHtml(cta.label || "Voir tout le calendrier →")}</a>
+      </div>
+      <div class="upcoming-events-grid">${listHtml}</div>
+    </section>
+  `;
+}
+
 function renderSpotlightSection(data, section) {
   return `
     <section id="a-la-une" class="section-shell">
@@ -668,6 +733,7 @@ function renderContactSection(data, section) {
 }
 
 const SECTION_RENDERERS = {
+  upcoming_events: renderUpcomingEventsSection,
   spotlight: renderSpotlightSection,
   story: renderStorySection,
   schedule: renderScheduleSection,

@@ -4,7 +4,6 @@ import {
   renderSocialLinksHtml,
   renderSectionsHtml,
   buildJsonLd,
-  cfImageSrcset,
 } from "../public/assets/sections-render.mjs";
 
 interface Env {
@@ -499,6 +498,8 @@ function publicResponseSettings(settings: Record<string, string>, env: Env): Rec
     hero_secondary_href: settings.hero_secondary_href || "https://calendrier.americanfullfightingbons.fr/",
     hero_secondary_enabled: settings.hero_secondary_enabled || "1",
     footer_note: settings.footer_note || "American Full Fighting Bons en Chablais",
+    upcoming_events_cta_label: settings.upcoming_events_cta_label || "Voir tout le calendrier →",
+    upcoming_events_cta_href: settings.upcoming_events_cta_href || "https://calendrier.americanfullfightingbons.fr/",
     spotlight_date: settings.spotlight_date || "",
     spotlight_title: settings.spotlight_title || "",
     spotlight_body: settings.spotlight_body || "",
@@ -823,7 +824,7 @@ async function readGoogleReviews(settings: Record<string, string>, env: Env): Pr
 
 async function getBootstrap(env: Env): Promise<Row> {
   const settings = publicResponseSettings(await readSettingsMap(env.DB), env);
-  const [sections, schedule, team, highlights, gallery, links, customButtons, customBlocks, resources, equipment, sponsors, news, faq, manualTestimonials, media, fallbackPricing, sharedPricing] = await Promise.all([
+  const [sections, schedule, team, highlights, gallery, links, customButtons, customBlocks, resources, equipment, sponsors, news, faq, manualTestimonials, media, fallbackPricing, sharedPricing, upcomingEventsRaw] = await Promise.all([
     readTable(env.DB, "SELECT * FROM landing_sections ORDER BY display_order, id"),
     readTable(env.DB, "SELECT * FROM schedule_slots ORDER BY display_order, id"),
     readTable(env.DB, "SELECT * FROM team_members ORDER BY display_order, id"),
@@ -841,9 +842,24 @@ async function getBootstrap(env: Env): Promise<Row> {
     readTable(env.DB, "SELECT * FROM media_assets ORDER BY display_order, id"),
     readTable(env.DB, "SELECT * FROM pricing_plans ORDER BY display_order, id"),
     readSharedPricing(env),
+    fetchUpcomingEvents(),
   ]);
   const googleTestimonials = await readGoogleReviews(settings, env).catch(() => []);
   const testimonials = googleTestimonials.length ? googleTestimonials : manualTestimonials;
+
+  // La section "À la une" (spotlight) est renseignée manuellement dans
+  // l'admin et peut donc mettre en avant le même évènement que celui déjà
+  // remonté automatiquement depuis le calendrier. On évite ce doublon en
+  // retirant de la liste "Prochainement au club" l'évènement dont le titre
+  // correspond à celui actuellement mis en avant.
+  // Note : on ne compare pas les dates ici — spotlight_date est un texte
+  // libre destiné à l'affichage (ex: "Le samedi 5 septembre 2026") alors que
+  // ev.date_start est au format ISO (ex: "2026-09-05") ; les deux ne sont
+  // jamais directement comparables telles quelles.
+  const spotlightTitle = String(settings.spotlight_title || "").trim().toLowerCase();
+  const upcomingEvents = upcomingEventsRaw
+    .filter((ev) => !spotlightTitle || ev.title.trim().toLowerCase() !== spotlightTitle)
+    .slice(0, 3);
   return {
     sitePublicUrl: settings.site_public_url,
     site: {
@@ -1016,6 +1032,11 @@ async function getBootstrap(env: Env): Promise<Row> {
     },
     inpiNote: settings.inpi_note,
     sections,
+    upcomingEvents,
+    upcomingEventsCta: {
+      label: settings.upcoming_events_cta_label,
+      href: settings.upcoming_events_cta_href,
+    },
     schedule,
     team,
     highlights,
@@ -1620,54 +1641,10 @@ async function fetchUpcomingEvents(): Promise<CalendrierEvent[]> {
   }
 }
 
-function formatEventDateFr(dateStart: string, timeStart?: string): string {
-  try {
-    const d = new Date(dateStart + (timeStart ? `T${timeStart}` : "T00:00:00"));
-    const formatted = d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" });
-    return timeStart ? `${formatted} · ${timeStart}` : formatted;
-  } catch {
-    return dateStart;
-  }
-}
-
-function renderUpcomingEventsHtml(events: CalendrierEvent[]): string {
-  if (events.length === 0) {
-    return `<p class="upcoming-events-empty">Le calendrier se remplit au fil de la saison — <a href="https://calendrier.americanfullfightingbons.fr/">consultez-le directement</a> pour ne rien manquer.</p>`;
-  }
-  return events
-    .map((ev) => {
-      const srcset = ev.poster_url ? cfImageSrcset(ev.poster_url, [300, 600]) : null;
-      // Si aucune affiche n'est renseignée dans le calendrier, on affiche le
-      // médaillon de repli (gant). Si une affiche EST renseignée mais que le
-      // fichier ne charge pas (supprimé, lien cassé...), onerror bascule sur
-      // le même médaillon plutôt que de laisser un cadre vide.
-      const posterHtml = ev.poster_url
-        ? `<img class="upcoming-event-poster" src="${escapeHtmlText(ev.poster_url)}"${srcset ? ` srcset="${escapeHtmlText(srcset)}" sizes="300px"` : ""} alt="" loading="lazy" decoding="async" onerror="this.outerHTML='&lt;div class=&quot;upcoming-event-poster upcoming-event-poster-fallback&quot; aria-hidden=&quot;true&quot;&gt;🥊&lt;/div&gt;'">`
-        : `<div class="upcoming-event-poster upcoming-event-poster-fallback" aria-hidden="true">🥊</div>`;
-      const priceTxt = ev.price && Number(ev.price) > 0 ? `${Number(ev.price).toFixed(0)} €` : "Gratuit";
-      const complet = ev.status === "complet";
-      return `<a class="upcoming-event-card" href="https://calendrier.americanfullfightingbons.fr/">
-        ${posterHtml}
-        <div class="upcoming-event-body">
-          <div class="upcoming-event-date">${escapeHtmlText(formatEventDateFr(ev.date_start, ev.time_start))}</div>
-          <h3 class="upcoming-event-title">${escapeHtmlText(ev.title)}</h3>
-          ${ev.sub ? `<p class="upcoming-event-sub">${escapeHtmlText(ev.sub)}</p>` : ""}
-          <div class="upcoming-event-meta">
-            ${ev.lieu ? `<span>${escapeHtmlText(ev.lieu)}</span>` : ""}
-            <span class="upcoming-event-price ${complet ? "upcoming-event-complet" : ""}">${complet ? "Complet" : priceTxt}</span>
-          </div>
-        </div>
-      </a>`;
-    })
-    .join("\n");
-}
-
-
 async function renderHomepage(request: Request, env: Env): Promise<Response> {
-  const [data, base, upcomingEventsRaw] = await Promise.all([
+  const [data, base] = await Promise.all([
     getBootstrap(env),
     env.ASSETS.fetch(request),
-    fetchUpcomingEvents(),
   ]);
   if (!base.ok || !(base.headers.get("content-type") || "").includes("text/html")) return base;
 
@@ -1679,22 +1656,7 @@ async function renderHomepage(request: Request, env: Env): Promise<Response> {
   const design = (data.design || {}) as Row;
   const meta = (data.meta || {}) as Row;
   const labels = (data.labels || {}) as Row;
-  const spotlight = (data.spotlight || {}) as Row;
   const utilityLinks = (hero.utilityLinks as Row[]) || [];
-
-  // La section "À la une" (spotlight) est renseignée manuellement dans
-  // l'admin et peut donc mettre en avant le même évènement que celui déjà
-  // remonté automatiquement depuis le calendrier. On évite ce doublon en
-  // retirant de la liste "Prochainement au club" l'évènement dont le titre
-  // correspond à celui actuellement mis en avant.
-  // Note : on ne compare pas les dates ici — spotlight_date est un texte
-  // libre destiné à l'affichage (ex: "Le samedi 5 septembre 2026") alors que
-  // ev.date_start est au format ISO (ex: "2026-09-05") ; les deux ne sont
-  // jamais directement comparables telles quelles.
-  const spotlightTitle = String(spotlight.title || "").trim().toLowerCase();
-  const upcomingEvents = upcomingEventsRaw
-    .filter((ev) => !spotlightTitle || ev.title.trim().toLowerCase() !== spotlightTitle)
-    .slice(0, 3);
 
   const rewriter = new HTMLRewriter()
     .on("title", new SetText(String(site.browserTitle || site.name || "American Full Fighting Bons en Chablais")))
@@ -1740,7 +1702,6 @@ async function renderHomepage(request: Request, env: Env): Promise<Response> {
     .on("#site-phone", new SetLink(site.phone as string, phoneHrefServer(site.phone)))
     .on("#site-address", new SetText(site.address as string))
     .on("#partner-links-top", new SetHtml(renderTopLinksHtml(data)))
-    .on("#upcoming-events-list", new SetHtml(renderUpcomingEventsHtml(upcomingEvents)))
     .on("#page-sections", new SetHtml(renderSectionsHtml(data)))
     .on("#footer-note", new SetText(site.footerNote as string))
     .on("#footer-legal", new SetText((data.footer as Row)?.legal as string))

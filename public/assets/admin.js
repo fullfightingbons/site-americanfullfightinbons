@@ -135,6 +135,16 @@ const SETTINGS_GROUPS = [
     ],
   },
   {
+    id: "upcoming-events",
+    title: "Prochainement au club",
+    icon: "📅",
+    description: "Bouton d'accès au calendrier. Le titre et le sous-titre de la section se modifient dans le panneau « Sections ».",
+    fields: [
+      ["upcoming_events_cta_label", "Bouton « voir tout »"],
+      ["upcoming_events_cta_href", "Lien du bouton"],
+    ],
+  },
+  {
     id: "spotlight",
     title: "À la une",
     icon: "★",
@@ -271,6 +281,7 @@ const BADGE_DEFINITIONS = [
 
 // Sections disponibles sur le site
 const SECTION_KEYS = [
+  { key: "upcoming_events", label: "Prochainement au club", icon: "📅" },
   { key: "story", label: "Le club", icon: "⬡" },
   { key: "spotlight", label: "À la une", icon: "★" },
   { key: "schedule", label: "Planning", icon: "⏱" },

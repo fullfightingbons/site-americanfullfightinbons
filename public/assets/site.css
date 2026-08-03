@@ -474,7 +474,6 @@ select:focus-visible{
 .story-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:20px}
 .story-card{padding:1.7rem}
 
-.upcoming-events{padding-top:1rem}
 .upcoming-events-all{
   justify-self:end;
   font-weight:700;
@@ -483,7 +482,10 @@ select:focus-visible{
 }
 .upcoming-events-grid{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  /* Largeur plafonnée (et plus 1fr) : avec un seul évènement, la carte ne
+     doit pas s'étirer sur toute la largeur de la section et devenir
+     disproportionnée par rapport aux autres cartes (ex: "À la une"). */
+  grid-template-columns:repeat(auto-fit,minmax(260px,340px));
   gap:18px;
 }
 .upcoming-events-empty{
