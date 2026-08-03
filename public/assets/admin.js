@@ -140,6 +140,7 @@ const SETTINGS_GROUPS = [
     icon: "📅",
     description: "Bouton d'accès au calendrier. Le titre et le sous-titre de la section se modifient dans le panneau « Sections ».",
     fields: [
+      ["upcoming_events_limit", "Nombre d'évènements affichés"],
       ["upcoming_events_cta_label", "Bouton « voir tout »"],
       ["upcoming_events_cta_href", "Lien du bouton"],
     ],

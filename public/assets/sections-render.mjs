@@ -208,7 +208,7 @@ function formatEventDateFr(dateStart, timeStart) {
   }
 }
 
-function renderUpcomingEventsSection(data, section) {
+function renderUpcomingEventsSection(data, section, opts = {}) {
   const events = data.upcomingEvents || [];
   const cta = data.upcomingEventsCta || {};
   // Les cartes individuelles pointent toujours vers le calendrier (source
@@ -244,8 +244,11 @@ function renderUpcomingEventsSection(data, section) {
         })
         .join("\n");
 
+  // En mode "compact" (accolé à "À la une"), la section n'a plus sa propre
+  // largeur max / son propre espacement de page : ceux-ci sont portés par
+  // le conteneur .section-duo qui l'englobe. Voir renderDuoSection.
   return `
-    <section id="upcoming-events" class="section-shell upcoming-events">
+    <section id="upcoming-events" class="${opts.compact ? "upcoming-events" : "section-shell upcoming-events"}">
       <div class="section-head">
         <div>
           <div class="section-tag">${escapeHtml(section.title || "Agenda du club")}</div>
@@ -258,9 +261,9 @@ function renderUpcomingEventsSection(data, section) {
   `;
 }
 
-function renderSpotlightSection(data, section) {
+function renderSpotlightSection(data, section, opts = {}) {
   return `
-    <section id="a-la-une" class="section-shell">
+    <section id="a-la-une" class="${opts.compact ? "" : "section-shell"}">
       <div class="section-head">
         <div>
           <div class="section-tag">${escapeHtml(section.title || "À la une")}</div>
@@ -732,6 +735,24 @@ function renderContactSection(data, section) {
   `;
 }
 
+// Paire de sections que l'on affiche côte à côte (plutôt que l'une sous
+// l'autre) quand elles sont toutes les deux actives ET adjacentes dans
+// l'ordre choisi depuis l'admin. Si l'ordre est modifié pour qu'une autre
+// section s'intercale entre les deux, ou que l'une des deux est désactivée,
+// chacune retombe simplement sur son rendu pleine largeur habituel.
+const DUO_PAIR = ["upcoming_events", "spotlight"];
+
+function renderDuoSection(data, sectionA, sectionB) {
+  const htmlA = SECTION_RENDERERS[sectionA.section_key](data, sectionA, { compact: true });
+  const htmlB = SECTION_RENDERERS[sectionB.section_key](data, sectionB, { compact: true });
+  return `
+    <div class="section-shell section-duo">
+      <div class="section-duo-col">${htmlA}</div>
+      <div class="section-duo-col">${htmlB}</div>
+    </div>
+  `;
+}
+
 const SECTION_RENDERERS = {
   upcoming_events: renderUpcomingEventsSection,
   spotlight: renderSpotlightSection,
@@ -753,8 +774,20 @@ const SECTION_RENDERERS = {
 };
 
 export function renderSectionsHtml(data) {
-  return (data.sections || [])
-    .filter((section) => Number(section.enabled) === 1 && SECTION_RENDERERS[section.section_key])
-    .map((section) => SECTION_RENDERERS[section.section_key](data, section))
-    .join("");
+  const enabled = (data.sections || []).filter(
+    (section) => Number(section.enabled) === 1 && SECTION_RENDERERS[section.section_key]
+  );
+  const html = [];
+  for (let i = 0; i < enabled.length; i++) {
+    const section = enabled[i];
+    const next = enabled[i + 1];
+    const isPair = next && DUO_PAIR.includes(section.section_key) && DUO_PAIR.includes(next.section_key) && section.section_key !== next.section_key;
+    if (isPair) {
+      html.push(renderDuoSection(data, section, next));
+      i++; // la section suivante vient d'être rendue dans le duo, on la saute
+      continue;
+    }
+    html.push(SECTION_RENDERERS[section.section_key](data, section));
+  }
+  return html.join("");
 }

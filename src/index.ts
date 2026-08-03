@@ -500,6 +500,7 @@ function publicResponseSettings(settings: Record<string, string>, env: Env): Rec
     footer_note: settings.footer_note || "American Full Fighting Bons en Chablais",
     upcoming_events_cta_label: settings.upcoming_events_cta_label || "Voir tout le calendrier →",
     upcoming_events_cta_href: settings.upcoming_events_cta_href || "https://calendrier.americanfullfightingbons.fr/",
+    upcoming_events_limit: settings.upcoming_events_limit || "1",
     spotlight_date: settings.spotlight_date || "",
     spotlight_title: settings.spotlight_title || "",
     spotlight_body: settings.spotlight_body || "",
@@ -857,9 +858,10 @@ async function getBootstrap(env: Env): Promise<Row> {
   // ev.date_start est au format ISO (ex: "2026-09-05") ; les deux ne sont
   // jamais directement comparables telles quelles.
   const spotlightTitle = String(settings.spotlight_title || "").trim().toLowerCase();
+  const upcomingEventsLimit = Math.max(1, Number(settings.upcoming_events_limit) || 1);
   const upcomingEvents = upcomingEventsRaw
     .filter((ev) => !spotlightTitle || ev.title.trim().toLowerCase() !== spotlightTitle)
-    .slice(0, 3);
+    .slice(0, upcomingEventsLimit);
   return {
     sitePublicUrl: settings.site_public_url,
     site: {
