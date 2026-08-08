@@ -20,6 +20,7 @@
   --radius:24px;
   --radius-lg:34px;
   --shadow:0 24px 60px rgba(7,17,29,.12);
+  --container-max:clamp(1180px,75vw,1440px);
   --font-display:'Sora',sans-serif;
   --font-body:'Inter',sans-serif;
   --font-nav:var(--font-body);
@@ -77,7 +78,7 @@ select:focus-visible{
   backdrop-filter:blur(16px);
 }
 .topbar-inner{
-  max-width:1180px;
+  max-width:var(--container-max);
   margin:0 auto;
   min-height:76px;
   display:flex;
@@ -201,7 +202,7 @@ select:focus-visible{
 }
 .hero-inner{
   position:relative;
-  max-width:1180px;
+  max-width:var(--container-max);
   margin:0 auto;
   display:grid;
   grid-template-columns:minmax(0,1.15fr) minmax(320px,.85fr);
@@ -406,7 +407,7 @@ select:focus-visible{
 }
 .quick-links{position:relative;margin-top:-1.3rem;padding:0 1.6rem}
 .quick-links-inner{
-  max-width:1180px;
+  max-width:var(--container-max);
   margin:0 auto;
   display:grid;
   grid-template-columns:repeat(3,minmax(0,1fr));
@@ -437,7 +438,7 @@ select:focus-visible{
   font-weight:700;
   color:var(--red-dark);
 }
-.section-shell{max-width:1180px;margin:0 auto;padding:5rem 1.6rem 0}
+.section-shell{max-width:var(--container-max);margin:0 auto;padding:5rem 1.6rem 0}
 .section-duo{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -1074,7 +1075,7 @@ select:focus-visible{
   text-transform:uppercase;
 }
 .site-footer-inner{
-  max-width:1180px;
+  max-width:var(--container-max);
   margin:0 auto;
   display:grid;
   gap:.7rem;
