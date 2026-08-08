@@ -20,7 +20,7 @@
   --radius:24px;
   --radius-lg:34px;
   --shadow:0 24px 60px rgba(7,17,29,.12);
-  --container-max:clamp(1180px,75vw,1440px);
+  --container-max:clamp(1180px,75vw,1760px);
   --font-display:'Sora',sans-serif;
   --font-body:'Inter',sans-serif;
   --font-nav:var(--font-body);
