@@ -49,5 +49,11 @@
       "database_name": "affbc-production",
       "database_id": "678b90d9-5d87-4011-b077-af5a4d0358ee"
     }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "R2_IMAGES",
+      "bucket_name": "affbc-site-images"
+    }
   ]
 }

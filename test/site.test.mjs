@@ -14,6 +14,7 @@ import {
   parseBooleanSetting,
   mergePricing,
   normalizeGoogleReview,
+  detectImageSignature,
 } from '../src/index.ts';
 
 describe('secureEquals', () => {
@@ -254,5 +255,40 @@ describe('normalizeGoogleReview', () => {
   it('rejette un avis sous la note minimale', () => {
     const review = { authorAttribution: {}, text: { text: 'Correct' }, rating: 3 };
     expect(normalizeGoogleReview(review, 0, 4)).toBeNull();
+  });
+});
+
+describe('detectImageSignature', () => {
+  it('reconnaît un JPEG à ses octets de tête', () => {
+    expect(detectImageSignature(new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0, 0]))).toBe('image/jpeg');
+  });
+
+  it('reconnaît un PNG à ses octets de tête', () => {
+    expect(detectImageSignature(new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))).toBe('image/png');
+  });
+
+  it('reconnaît un WEBP (conteneur RIFF...WEBP)', () => {
+    const bytes = new Uint8Array([0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x45, 0x42, 0x50]);
+    expect(detectImageSignature(bytes)).toBe('image/webp');
+  });
+
+  it('reconnaît un GIF89a', () => {
+    expect(detectImageSignature(new Uint8Array([0x47, 0x49, 0x46, 0x38, 0x39, 0x61]))).toBe('image/gif');
+  });
+
+  it("rejette un contenu qui n'est pas une image (ex : un exécutable ou un fichier renommé)", () => {
+    expect(detectImageSignature(new Uint8Array([0x4d, 0x5a, 0x90, 0x00]))).toBeNull();
+  });
+
+  it('rejette un buffer trop court pour être une image valide', () => {
+    expect(detectImageSignature(new Uint8Array([0xff, 0xd8]))).toBeNull();
+  });
+
+  it("ne se fie pas à une extension/Content-Type usurpé : seuls les octets comptent", () => {
+    // Un fichier .png dont le contenu réel est du texte brut (cas d'un
+    // fichier renommé à la main pour contourner une vérification côté
+    // client) doit être rejeté malgré son nom/extension.
+    const fakeBytes = new TextEncoder().encode('<script>alert(1)</script>');
+    expect(detectImageSignature(fakeBytes)).toBeNull();
   });
 });

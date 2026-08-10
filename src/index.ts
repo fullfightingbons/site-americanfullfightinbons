@@ -10,6 +10,7 @@ interface Env {
   ASSETS: Fetcher;
   DB: D1Database;
   AFFBC_DB?: D1Database;
+  R2_IMAGES?: R2Bucket;
   SITE_NAME?: string;
   CONTACT_EMAIL?: string;
   CONTACT_PHONE?: string;
@@ -1377,6 +1378,89 @@ async function handleAdminSave(request: Request, env: Env): Promise<Response> {
   return error("Action non supportée.");
 }
 
+// ─── Upload d'image (admin) ────────────────────────────────────────────
+// Jusqu'ici, le champ "image" de l'éditeur visuel (admin.js, type: "image")
+// compressait l'image côté navigateur (compressImageFile) puis stockait le
+// data: URI base64 résultant DIRECTEMENT dans la colonne texte concernée
+// (team.image_url, news.image_url, design.heroBackgroundImage, etc.) — donc
+// techniquement "ça marchait", mais chaque image alourdissait durablement
+// la base D1 et la réponse de /api/bootstrap (qui charge tout le contenu du
+// site à chaque visite), au lieu d'être un fichier séparé, cacheable, servi
+// une fois puis mis en cache par le navigateur/CDN. C'est ce que la note du
+// README appelait "l'upload d'images n'est pas encore implémenté" : le
+// following remplace ce data: URI par un vrai fichier R2 + une URL courte.
+//
+// La signature du fichier (premiers octets) est vérifiée indépendamment du
+// Content-Type envoyé par le navigateur, jamais fiable seul — même principe
+// que boutique/src/worker.js (detectImageSignature).
+const MAX_UPLOAD_BYTES = 6 * 1024 * 1024; // 6 Mo (l'image est déjà compressée côté client avant envoi)
+
+function detectImageSignature(bytes: Uint8Array): string | null {
+  if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "image/jpeg";
+  if (
+    bytes.length >= 8 &&
+    bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47 &&
+    bytes[4] === 0x0d && bytes[5] === 0x0a && bytes[6] === 0x1a && bytes[7] === 0x0a
+  ) return "image/png";
+  if (
+    bytes.length >= 12 &&
+    bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 &&
+    bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50
+  ) return "image/webp";
+  if (
+    bytes.length >= 6 &&
+    bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x38 &&
+    (bytes[4] === 0x37 || bytes[4] === 0x39) && bytes[5] === 0x61
+  ) return "image/gif";
+  return null;
+}
+
+async function handleAdminUpload(request: Request, env: Env): Promise<Response> {
+  await requireAdmin(request, env);
+  if (!env.R2_IMAGES) return error("Stockage d'images non configuré (binding R2_IMAGES manquant).", 503);
+
+  const contentType = request.headers.get("Content-Type") || "";
+  let buffer: ArrayBuffer;
+  if (contentType.includes("multipart/form-data")) {
+    const formData = await request.formData();
+    const file = formData.get("image");
+    if (!(file instanceof File)) return error('Champ "image" manquant.');
+    buffer = await file.arrayBuffer();
+  } else {
+    // Corps brut (le front envoie le Blob compressé directement, cf. admin.js)
+    buffer = await request.arrayBuffer();
+  }
+
+  if (!buffer.byteLength) return error("Fichier vide.");
+  if (buffer.byteLength > MAX_UPLOAD_BYTES) return error("Image trop volumineuse (6 Mo maximum).", 413);
+
+  const signature = detectImageSignature(new Uint8Array(buffer.slice(0, 12)));
+  if (!signature) return error("Format non supporté (jpg, png, webp, gif attendus).", 400);
+
+  const ext = signature.split("/")[1].replace("jpeg", "jpg");
+  const key = `uploads/${new Date().toISOString().slice(0, 10)}/${crypto.randomUUID()}.${ext}`;
+  await env.R2_IMAGES.put(key, buffer, { httpMetadata: { contentType: signature } });
+
+  return ok({ url: `/api/images/${key}` }, {}, request);
+}
+
+async function handleServeImage(request: Request, env: Env, pathname: string): Promise<Response> {
+  if (!env.R2_IMAGES) return error("Stockage d'images non configuré.", 503);
+  const key = decodeURIComponent(pathname.replace(/^\/api\/images\//, ""));
+  if (!key) return error("Clé manquante.", 400);
+  const object = await env.R2_IMAGES.get(key);
+  if (!object) return error("Image introuvable.", 404, request);
+  return withHeaders(
+    new Response(object.body, {
+      headers: {
+        "content-type": object.httpMetadata?.contentType || "application/octet-stream",
+        "cache-control": "public, max-age=31536000, immutable",
+      },
+    }),
+    request,
+  );
+}
+
 // ─── Login pour le Visual Builder (password seul → Bearer token) ─────────────
 
 async function handleAdminLogin(request: Request, env: Env): Promise<Response> {
@@ -1480,6 +1564,14 @@ async function routeApi(request: Request, env: Env, pathname: string): Promise<R
   if (pathname === "/api/admin/content" && request.method === "POST") {
     return handleAdminSave(request, env);
   }
+  if (pathname === "/api/admin/upload" && request.method === "POST") {
+    return handleAdminUpload(request, env);
+  }
+  // Clé R2 potentiellement composée (uploads/2026-08-09/xxxx.jpg) : préfixe,
+  // pas d'égalité stricte.
+  if (pathname.startsWith("/api/images/") && request.method === "GET") {
+    return handleServeImage(request, env, pathname);
+  }
 
   return error("Not found", 404, request);
 }
@@ -1500,6 +1592,7 @@ export {
   parseBooleanSetting,
   mergePricing,
   normalizeGoogleReview,
+  detectImageSignature,
 };
 
 /**

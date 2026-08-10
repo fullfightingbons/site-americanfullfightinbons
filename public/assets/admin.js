@@ -1831,7 +1831,28 @@ async function compressImageFile(file, maxSize = 1200, quality = 0.82) {
   canvas.height = height;
   const context = canvas.getContext("2d");
   context.drawImage(image, 0, 0, width, height);
-  return canvas.toDataURL("image/jpeg", quality);
+  // toBlob (octets réels) plutôt que toDataURL (chaîne base64) : l'image est
+  // ensuite envoyée telle quelle à /api/admin/upload, pas gonflée de ~33%
+  // par un encodage base64 inutile à ce stade.
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => (blob ? resolve(blob) : reject(new Error("Compression de l'image impossible."))),
+      "image/jpeg",
+      quality,
+    );
+  });
+}
+
+// Envoie le Blob compressé à /api/admin/upload (R2, cf. src/index.ts) et
+// renvoie l'URL courte à stocker dans le champ (ex: /api/images/uploads/...).
+// Remplace l'ancien comportement qui stockait le data: URI base64 directement
+// en base — cf. le commentaire au-dessus de handleAdminUpload côté worker.
+async function uploadImageFile(blob) {
+  return api("/api/admin/upload", {
+    method: "POST",
+    headers: {}, // pas de JSON ici : laisse le navigateur poser Content-Type depuis le Blob
+    body: blob,
+  });
 }
 
 function openEditModal(config) {
@@ -1893,13 +1914,20 @@ function openEditModal(config) {
       fileInput.addEventListener("change", async () => {
         const file = fileInput.files?.[0];
         if (!file) return;
+        fileInput.disabled = true;
         try {
-          input.value = await compressImageFile(file);
-          preview.src = input.value;
+          showStatus("Compression puis envoi de l'image…", false);
+          const blob = await compressImageFile(file);
+          const { url } = await uploadImageFile(blob);
+          input.value = url;
+          preview.src = url;
           preview.hidden = false;
-          showStatus("Image prête à enregistrer.", false);
+          showStatus("Image envoyée et prête à enregistrer.", false);
         } catch (error) {
-          showStatus(error instanceof Error ? error.message : "Image impossible à préparer.");
+          showStatus(error instanceof Error ? error.message : "Image impossible à envoyer.");
+        } finally {
+          fileInput.disabled = false;
+          fileInput.value = "";
         }
       });
 
