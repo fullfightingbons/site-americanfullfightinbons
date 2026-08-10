@@ -6,7 +6,7 @@
   "scripts": {
     "cf-typegen": "wrangler types",
     "typecheck": "tsc --noEmit",
-    "check": "tsc --noEmit && wrangler deploy --dry-run",
+    "check": "npm run typecheck && npm test && wrangler deploy --dry-run",
     "deploy": "wrangler deploy",
     "dev": "wrangler dev",
     "seedLocalD1": "wrangler d1 migrations apply DB --local",

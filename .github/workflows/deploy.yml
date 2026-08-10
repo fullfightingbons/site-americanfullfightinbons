@@ -18,9 +18,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
+          cache: "npm"
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Tests
+        run: npm test --if-present
+
+      - name: Dry-run deploy
+        run: npx wrangler deploy --dry-run
 
       - name: Apply D1 migrations
         env:
