@@ -95,8 +95,8 @@ npm run deploy
 
 - Le endpoint `/api/auth/login` est limité à **10 tentatives / 15 min par IP** (in-memory).  
   Pour une protection renforcée en production, ajouter une Cloudflare Rate Limiting Rule sur `/api/auth/login`.
-- L'upload d'images (`/api/admin/upload`) n'est pas encore implémenté.  
-  Pour ajouter une image, collez directement une URL dans le champ correspondant de l'admin.
+- L'upload d'images (`/api/admin/upload`) compresse les images côté navigateur puis les stocke dans R2 quand le binding est configuré.
+  Une URL externe reste acceptée dans les champs image si nécessaire.
 - Le checkout HelloAsso nécessite aussi de renseigner dans l'admin :
   `URL publique du site`, `Slug organisation HelloAsso` et l'activation du checkout mécénat.
 - Le contenu initial est inspiré du site public `americanfullfightingbons.fr`.

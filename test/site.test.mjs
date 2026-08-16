@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'node:fs';
 import {
   checkLoginRateLimit,
   parseCookies,
@@ -16,6 +17,9 @@ import {
   normalizeGoogleReview,
   detectImageSignature,
 } from '../src/index.ts';
+
+const adminSource = readFileSync(new URL('../public/assets/admin.js', import.meta.url), 'utf8');
+const workerSource = readFileSync(new URL('../src/index.ts', import.meta.url), 'utf8');
 
 describe('secureEquals', () => {
   it('retourne true pour deux chaînes identiques', () => {
@@ -290,5 +294,13 @@ describe('detectImageSignature', () => {
     // client) doit être rejeté malgré son nom/extension.
     const fakeBytes = new TextEncoder().encode('<script>alert(1)</script>');
     expect(detectImageSignature(fakeBytes)).toBeNull();
+  });
+});
+
+describe('admin messages', () => {
+  it('charge plus de messages et propose un export CSV local', () => {
+    expect(workerSource).toContain('contact_messages ORDER BY created_at DESC LIMIT 200');
+    expect(adminSource).toContain('function exportMessagesCSV');
+    expect(adminSource).toContain('data-export-messages');
   });
 });

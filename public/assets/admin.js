@@ -334,6 +334,37 @@ function inputValue(value) {
   return escapeHtml(value);
 }
 
+function csvCell(value) {
+  return `"${String(value ?? "").replace(/"/g, '""')}"`;
+}
+
+function downloadTextFile(filename, content, type = "text/plain;charset=utf-8") {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function exportMessagesCSV() {
+  const messages = state?.messages || [];
+  if (!messages.length) {
+    showStatus("Aucun message à exporter.");
+    return;
+  }
+  const rows = [
+    ["Date", "Statut", "Nom", "Email", "Téléphone", "Message"],
+    ...messages.map((m) => [m.created_at, m.status, m.full_name, m.email, m.phone, m.message]),
+  ];
+  const csv = rows.map((row) => row.map(csvCell).join(";")).join("\n");
+  const stamp = new Date().toISOString().slice(0, 10);
+  downloadTextFile(`messages-contact-${stamp}.csv`, csv, "text/csv;charset=utf-8");
+}
+
 async function api(path, options = {}) {
   const response = await fetch(path, {
     credentials: "same-origin",
@@ -958,6 +989,11 @@ function renderMessagesPanel() {
 
   el.innerHTML = `
     <div class="vb-entity-panel">
+      ${messages.length > 0 ? `
+        <div class="vb-entity-actions" style="justify-content:flex-end;margin-bottom:1rem">
+          <button class="btn btn-dark" type="button" data-export-messages>Exporter CSV</button>
+        </div>
+      ` : ""}
       ${messages.length === 0 ? `<div class="vb-entity-empty">Aucun message reçu.</div>` : ""}
       ${["new", "read", "done"].map((status) => {
         if (byStatus[status].length === 0) return "";
@@ -1722,6 +1758,12 @@ document.addEventListener("click", async (event) => {
     } catch (err) {
       showStatus(err.message || "Erreur");
     }
+    return;
+  }
+
+  // ── Export messages
+  if (button.dataset.exportMessages !== undefined) {
+    exportMessagesCSV();
     return;
   }
 

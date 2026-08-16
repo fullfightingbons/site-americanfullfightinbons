@@ -1294,7 +1294,7 @@ async function adminBootstrap(request: Request, env: Env): Promise<Response> {
   const user = await requireAdmin(request, env);
   const [bootstrap, messages] = await Promise.all([
     getBootstrap(env),
-    readTable(env.DB, "SELECT id, full_name, email, phone, message, status, created_at FROM contact_messages ORDER BY created_at DESC LIMIT 50"),
+    readTable(env.DB, "SELECT id, full_name, email, phone, message, status, created_at FROM contact_messages ORDER BY created_at DESC LIMIT 200"),
   ]);
   return ok({
     user,
